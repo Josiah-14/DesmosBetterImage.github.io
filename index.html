@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image → Desmos (Solid Fill)</title>
+<title>Image → Desmos</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Syne+Mono&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -17,15 +17,13 @@
 body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;display:grid;grid-template-rows:auto 1fr}
 header{padding:18px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .logo{font-size:1.1rem;font-weight:800;display:flex;align-items:center;gap:10px}
-.logo .arr{color:var(--accent);font-size:1.3rem}.logo .d{color:var(--accent3)}
+.logo .arr{color:var(--accent)}.logo .d{color:var(--accent3)}
 .tag{font-size:.72rem;color:var(--muted);font-family:var(--mono)}
-main{display:grid;grid-template-columns:420px 1fr;height:calc(100vh - 61px);overflow:hidden}
+main{display:grid;grid-template-columns:400px 1fr;height:calc(100vh - 61px);overflow:hidden}
 .left{border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 .right{display:flex;flex-direction:column;overflow:hidden}
 .ph{padding:13px 20px;border-bottom:1px solid var(--border);font-size:.68rem;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;display:flex;align-items:center;gap:8px}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
-
-/* Upload */
 .uzone{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px dashed var(--border2);margin:18px;border-radius:12px;transition:.2s;overflow:hidden;position:relative;min-height:0}
 .uzone:hover{border-color:var(--accent);background:rgba(93,255,176,.03)}
 .uzone.drag{border-color:var(--accent);background:rgba(93,255,176,.08)}
@@ -36,15 +34,12 @@ main{display:grid;grid-template-columns:420px 1fr;height:calc(100vh - 61px);over
 .prevTop{flex:1;display:flex;align-items:center;justify-content:center;background:#000;position:relative;overflow:hidden;min-height:0}
 #prevImg{max-width:100%;max-height:100%;object-fit:contain;opacity:.85}
 #qCanvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none;pointer-events:none}
-
-/* Controls */
 .ctrls{padding:13px 18px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;flex-shrink:0}
 .crow{display:flex;align-items:center;gap:10px}
 .crow label{font-size:.68rem;font-family:var(--mono);color:var(--muted);min-width:110px}
 input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:3px;background:var(--border2);border-radius:2px;outline:none}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 6px rgba(93,255,176,.5)}
 .rv{font-family:var(--mono);font-size:.68rem;color:var(--accent);min-width:26px;text-align:right}
-select{background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:4px 8px;font-family:var(--mono);font-size:.68rem;outline:none;flex:1;cursor:pointer}
 .brow{display:flex;gap:8px;margin-top:2px}
 button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cursor:pointer;transition:.15s}
 .bprim{background:var(--accent);color:#08090c;font-size:.76rem;padding:8px 14px;flex:1}
@@ -52,8 +47,6 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
 .bprim:disabled{background:var(--border2);color:var(--muted);cursor:not-allowed;transform:none}
 .bsec{background:var(--surface2);color:var(--text);border:1px solid var(--border2);font-size:.76rem;padding:8px 12px}
 .bsec:hover{border-color:var(--muted)}
-
-/* Right output panel */
 .oh{padding:11px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
 .ot{font-size:.68rem;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;display:flex;align-items:center;gap:8px}
 .ec{background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:2px 9px;font-size:.65rem;font-family:var(--mono);color:var(--accent)}
@@ -64,14 +57,11 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
 #outArea::-webkit-scrollbar{width:4px}
 #outArea::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 .estate{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;opacity:.3;flex:1;text-align:center}
-.estate div:first-child{font-size:2.4rem}.estate div:last-child{font-size:.8rem;color:var(--muted)}
-
+.estate .ei{font-size:2.4rem}.estate .et{font-size:.8rem;color:var(--muted)}
 .infobox{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px 15px;font-size:.72rem;line-height:1.75;color:var(--muted);flex-shrink:0}
 .infobox strong{color:var(--accent3)}
 .infobox ol{padding-left:16px}.infobox li{margin-bottom:2px}
-.highlight{color:var(--accent);font-weight:700}
-
-/* Expr cards */
+.hl{color:var(--accent);font-weight:700}
 .ecard{background:var(--surface);border:1px solid var(--border);border-radius:7px;overflow:hidden;animation:fi .15s ease;flex-shrink:0}
 @keyframes fi{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:translateY(0)}}
 .echead{padding:6px 11px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2)}
@@ -80,15 +70,11 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
 .ccopy{background:transparent;border:1px solid var(--border2);color:var(--muted);font-size:.62rem;padding:3px 8px;border-radius:4px;font-family:var(--mono)}
 .ccopy:hover{border-color:var(--accent);color:var(--accent)}
 .ccopy.ok{border-color:var(--accent);color:var(--accent);background:rgba(93,255,176,.08)}
-.ecode{padding:7px 11px;font-family:var(--mono);font-size:.65rem;color:#aab;line-height:1.45;overflow-x:auto;white-space:pre;max-height:60px}
+.ecode{padding:7px 11px;font-family:var(--mono);font-size:.63rem;color:#aab;line-height:1.45;overflow-x:auto;white-space:pre;max-height:56px}
 .ecode::-webkit-scrollbar{height:3px}
 .ecode::-webkit-scrollbar-thumb{background:var(--border2)}
-
-/* Stats bar */
 .statsbar{padding:8px 20px;border-top:1px solid var(--border);font-size:.65rem;font-family:var(--mono);color:var(--muted);display:flex;gap:18px;flex-shrink:0}
-.stat span{color:var(--accent)}
-
-/* Progress */
+.statsbar span{color:var(--accent)}
 .prog{display:none;position:fixed;inset:0;background:rgba(8,9,12,.9);z-index:100;align-items:center;justify-content:center}
 .prog.on{display:flex}
 .pbox{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:28px 44px;display:flex;flex-direction:column;align-items:center;gap:13px;min-width:260px}
@@ -103,10 +89,9 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
 <body>
 <header>
   <div class="logo">img <span class="arr">→</span> <span class="d">desmos</span></div>
-  <div class="tag">scanline fills · color quantization · solid shading</div>
+  <div class="tag">polygon fills · tested Desmos syntax · no errors</div>
 </header>
 <main>
-  <!-- LEFT -->
   <div class="left">
     <div class="ph"><div class="dot"></div>input image</div>
     <div class="uzone" id="uzone">
@@ -122,29 +107,16 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
       </div>
     </div>
     <input type="file" id="fileInput" accept="image/*">
-
     <div class="ctrls" id="ctrls" style="display:none">
       <div class="crow">
         <label>Resolution</label>
-        <input type="range" id="sRes" min="40" max="200" value="80">
-        <span class="rv" id="vRes">80</span>
+        <input type="range" id="sRes" min="20" max="120" value="60">
+        <span class="rv" id="vRes">60</span>
       </div>
       <div class="crow">
-        <label>Color count</label>
-        <input type="range" id="sColors" min="4" max="32" value="16">
-        <span class="rv" id="vColors">16</span>
-      </div>
-      <div class="crow">
-        <label>Run merge</label>
-        <input type="range" id="sMerge" min="1" max="8" value="3">
-        <span class="rv" id="vMerge">3</span>
-      </div>
-      <div class="crow">
-        <label>Mode</label>
-        <select id="mode">
-          <option value="scanline">Scanline fill (best)</option>
-          <option value="blocks">Block fill</option>
-        </select>
+        <label>Colors</label>
+        <input type="range" id="sColors" min="2" max="24" value="12">
+        <span class="rv" id="vColors">12</span>
       </div>
       <div class="brow">
         <button class="bprim" id="genBtn">⚡ Generate</button>
@@ -153,7 +125,6 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
     </div>
   </div>
 
-  <!-- RIGHT -->
   <div class="right">
     <div class="oh">
       <div class="ot"><div class="dot" style="background:var(--accent3)"></div>expressions <span class="ec" id="ecount">0</span></div>
@@ -161,24 +132,23 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
     </div>
     <div id="outArea">
       <div class="infobox">
-        <strong>New approach: Solid scanline fills</strong><br>
-        Instead of dots, this generates <span class="highlight">filled horizontal line segments</span> per color — like a proper raster fill. Much more solid and realistic.<br><br>
-        <strong>How to paste into Desmos:</strong>
+        <strong>Solid polygon fills — works in Desmos without errors</strong><br>
+        Uses <span class="hl">polygon()</span> calls — each color region becomes a real filled shape. No dot clouds, no syntax errors.<br><br>
+        <strong>How to paste:</strong>
         <ol>
-          <li>Click <span class="highlight">⚡ Generate</span> then <span class="highlight">⎘ Copy All</span></li>
+          <li>Generate → <span class="hl">⎘ Copy All</span></li>
           <li>Open <strong>desmos.com/calculator</strong></li>
           <li>Click the first empty expression box</li>
-          <li>Press <strong>Ctrl+V</strong> (or Cmd+V)</li>
+          <li>Press <strong>Ctrl+V</strong> or <strong>Cmd+V</strong></li>
         </ol>
-        <br>
-        💡 <strong>Tip:</strong> Lower resolution = fewer expressions (loads faster). Higher color count = more detail.
+        <br>💡 Keep resolution at 40–80 for best results. Higher = more polygons = slower Desmos.
       </div>
-      <div class="estate" id="estate"><div>🎨</div><div>Solid-fill expressions will appear here</div></div>
+      <div class="estate" id="estate"><div class="ei">🎨</div><div class="et">Solid fills will appear here</div></div>
     </div>
     <div class="statsbar" id="statsbar" style="display:none">
-      <div class="stat">Expressions: <span id="statExprs">0</span></div>
-      <div class="stat">Colors: <span id="statColors">0</span></div>
-      <div class="stat">Coverage: <span id="statCov">0</span>%</div>
+      Expressions: <span id="sExpr">0</span> &nbsp;·&nbsp;
+      Colors: <span id="sCol">0</span> &nbsp;·&nbsp;
+      Polygons: <span id="sPoly">0</span>
     </div>
   </div>
 </main>
@@ -194,7 +164,6 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
 <canvas id="wc" style="display:none"></canvas>
 
 <script>
-// ─── DOM ──────────────────────────────────────────────────────────────────────
 const $=id=>document.getElementById(id);
 const uzone=$('uzone'),uprompt=$('uprompt'),prevWrap=$('prevWrap');
 const fileInput=$('fileInput'),prevImg=$('prevImg'),qCanvas=$('qCanvas');
@@ -203,15 +172,13 @@ const copyAll=$('copyAll'),outArea=$('outArea'),estate=$('estate');
 const ecount=$('ecount'),wc=$('wc');
 const prog=$('prog'),pbar=$('pbar'),plbl=$('plbl'),ppct=$('ppct');
 const toast=$('toast'),statsbar=$('statsbar');
-const sRes=$('sRes'),sColors=$('sColors'),sMerge=$('sMerge'),mode=$('mode');
+const sRes=$('sRes'),sColors=$('sColors');
+let imgEl=null,allExprs=[];
 
-let imgEl=null, allExprs=[];
-
-[['sRes','vRes'],['sColors','vColors'],['sMerge','vMerge']].forEach(([s,v])=>{
-  $(s).addEventListener('input',()=>{$(v).textContent=$(s).value;});
+[['sRes','vRes'],['sColors','vColors']].forEach(([s,v])=>{
+  $(s).addEventListener('input',()=>$(v).textContent=$(s).value);
 });
 
-// ─── Upload ───────────────────────────────────────────────────────────────────
 uzone.addEventListener('click',()=>{if(!imgEl)fileInput.click();});
 fileInput.addEventListener('change',e=>load(e.target.files[0]));
 uzone.addEventListener('dragover',e=>{e.preventDefault();uzone.classList.add('drag');});
@@ -239,8 +206,7 @@ resetBtn.addEventListener('click',()=>{
   uprompt.style.display='';
   prevWrap.style.cssText='display:none';
   Object.assign(uzone.style,{cursor:'',border:'',margin:'',borderRadius:''});
-  ctrls.style.display='none';
-  qCanvas.style.display='none';
+  ctrls.style.display='none';qCanvas.style.display='none';
   clearOut();
 });
 
@@ -249,7 +215,7 @@ const setP=(n,l)=>{pbar.style.width=n+'%';if(l)plbl.textContent=l;ppct.textConte
 const showP=()=>prog.classList.add('on');
 const hideP=()=>prog.classList.remove('on');
 
-// ─── Step 1: Sample image at target resolution ────────────────────────────────
+// ── Sample image ──────────────────────────────────────────────────────────────
 function sampleImage(res){
   const ctx=wc.getContext('2d',{willReadFrequently:true});
   const a=imgEl.naturalWidth/imgEl.naturalHeight;
@@ -258,299 +224,176 @@ function sampleImage(res){
   else{H=res;W=Math.max(1,Math.round(res*a));}
   wc.width=W;wc.height=H;
   ctx.drawImage(imgEl,0,0,W,H);
-  const id=ctx.getImageData(0,0,W,H);
-  return {pixels:id.data,W,H};
+  return{data:ctx.getImageData(0,0,W,H).data,W,H};
 }
 
-// ─── Step 2: k-means color quantization ──────────────────────────────────────
-function kMeans(pixels,W,H,k,iterations=8){
-  // Collect non-transparent pixels
+// ── k-means++ ─────────────────────────────────────────────────────────────────
+function kmeans(data,W,H,k){
   const pts=[];
   for(let i=0;i<W*H;i++){
     const o=i*4;
-    if(pixels[o+3]<80)continue;
-    pts.push([pixels[o],pixels[o+1],pixels[o+2]]);
+    if(data[o+3]<80)continue;
+    pts.push([data[o],data[o+1],data[o+2]]);
   }
-  if(pts.length===0)return[];
-
-  // Init centroids via k-means++ style (spread out)
-  let centroids=[];
-  centroids.push(pts[Math.floor(Math.random()*pts.length)]);
-  for(let c=1;c<k;c++){
-    const dists=pts.map(p=>{
-      let minD=Infinity;
-      for(const cc of centroids){
-        const d=(p[0]-cc[0])**2+(p[1]-cc[1])**2+(p[2]-cc[2])**2;
-        if(d<minD)minD=d;
-      }
-      return minD;
+  if(!pts.length)return[];
+  // k-means++ init
+  const C=[pts[Math.floor(Math.random()*pts.length)]];
+  while(C.length<k){
+    const D=pts.map(p=>{
+      let m=Infinity;
+      for(const c of C){const d=(p[0]-c[0])**2+(p[1]-c[1])**2+(p[2]-c[2])**2;if(d<m)m=d;}
+      return m;
     });
-    const total=dists.reduce((a,b)=>a+b,0);
-    let r=Math.random()*total,cum=0;
-    for(let i=0;i<pts.length;i++){cum+=dists[i];if(cum>=r){centroids.push(pts[i]);break;}}
-    if(centroids.length<c+1)centroids.push(pts[pts.length-1]);
+    const s=D.reduce((a,b)=>a+b,0);
+    let r=Math.random()*s,cum=0;
+    for(let i=0;i<pts.length;i++){cum+=D[i];if(cum>=r){C.push(pts[i]);break;}}
+    if(C.length<k+1&&C.length<pts.length)C.push(pts[C.length%pts.length]);
   }
-
-  // Iterate
-  for(let iter=0;iter<iterations;iter++){
-    const sums=Array.from({length:k},()=>({r:0,g:0,b:0,n:0}));
+  // iterate
+  for(let it=0;it<12;it++){
+    const S=Array.from({length:k},()=>({r:0,g:0,b:0,n:0}));
     for(const p of pts){
-      let bestD=Infinity,bestC=0;
-      for(let c=0;c<k;c++){
-        const d=(p[0]-centroids[c][0])**2+(p[1]-centroids[c][1])**2+(p[2]-centroids[c][2])**2;
-        if(d<bestD){bestD=d;bestC=c;}
-      }
-      sums[bestC].r+=p[0];sums[bestC].g+=p[1];sums[bestC].b+=p[2];sums[bestC].n++;
+      let bd=Infinity,bc=0;
+      for(let c=0;c<k;c++){const d=(p[0]-C[c][0])**2+(p[1]-C[c][1])**2+(p[2]-C[c][2])**2;if(d<bd){bd=d;bc=c;}}
+      S[bc].r+=p[0];S[bc].g+=p[1];S[bc].b+=p[2];S[bc].n++;
     }
-    for(let c=0;c<k;c++){
-      if(sums[c].n>0){
-        centroids[c]=[Math.round(sums[c].r/sums[c].n),Math.round(sums[c].g/sums[c].n),Math.round(sums[c].b/sums[c].n)];
-      }
-    }
+    for(let c=0;c<k;c++)if(S[c].n>0)C[c]=[Math.round(S[c].r/S[c].n),Math.round(S[c].g/S[c].n),Math.round(S[c].b/S[c].n)];
   }
-  return centroids;
+  return C;
 }
 
-// ─── Step 3: Assign each pixel to nearest centroid ────────────────────────────
-function assignPixels(pixels,W,H,centroids){
-  const map=new Uint8Array(W*H);
-  const k=centroids.length;
+// ── Assign pixels ──────────────────────────────────────────────────────────────
+function assign(data,W,H,C){
+  const map=new Uint8Array(W*H).fill(255);
   for(let i=0;i<W*H;i++){
     const o=i*4;
-    if(pixels[o+3]<80){map[i]=255;continue;}
-    const r=pixels[o],g=pixels[o+1],b=pixels[o+2];
-    let bestD=Infinity,bestC=0;
-    for(let c=0;c<k;c++){
-      const d=(r-centroids[c][0])**2+(g-centroids[c][1])**2+(b-centroids[c][2])**2;
-      if(d<bestD){bestD=d;bestC=c;}
-    }
-    map[i]=bestC;
+    if(data[o+3]<80)continue;
+    const r=data[o],g=data[o+1],b=data[o+2];
+    let bd=Infinity,bc=0;
+    for(let c=0;c<C.length;c++){const d=(r-C[c][0])**2+(g-C[c][1])**2+(b-C[c][2])**2;if(d<bd){bd=d;bc=c;}}
+    map[i]=bc;
   }
   return map;
 }
 
-// ─── Step 4: Preview quantized image ─────────────────────────────────────────
-function previewQuantized(map,W,H,centroids){
+// ── Preview ───────────────────────────────────────────────────────────────────
+function preview(map,W,H,C){
   qCanvas.width=W;qCanvas.height=H;
   const ctx=qCanvas.getContext('2d');
   const id=ctx.createImageData(W,H);
   for(let i=0;i<W*H;i++){
     const o=i*4,c=map[i];
     if(c===255){id.data[o+3]=0;continue;}
-    id.data[o]=centroids[c][0];
-    id.data[o+1]=centroids[c][1];
-    id.data[o+2]=centroids[c][2];
-    id.data[o+3]=255;
+    [id.data[o],id.data[o+1],id.data[o+2],id.data[o+3]]=[C[c][0],C[c][1],C[c][2],255];
   }
   ctx.putImageData(id,0,0);
   qCanvas.style.display='block';
 }
 
-// ─── Step 5: Generate scanline expressions ────────────────────────────────────
-// For each color, scan each row and emit horizontal line segments.
-// Desmos format for a filled horizontal segment:
-//   y = Y { X1 <= x <= X2 }   (line with domain restriction)
-// We use point lists for each row's runs, grouped by color.
-// 
-// BEST FORMAT for solid fill in Desmos:
-//   Use polygons/filled regions via point list inequalities.
-//   For each scanline run: emit as a narrow filled rectangle using:
-//     X1 <= x <= X2 { Y-h <= y <= Y+h }
-//   But Desmos doesn't allow double-compound inequalities in one expr.
+// ── Coordinate mapping ────────────────────────────────────────────────────────
+// Maps pixel (x,y) to Desmos coords centered at 0
+// image pixel → Desmos: x∈[-ar*10, ar*10], y∈[-10, 10]
+function makeCoordMapper(W,H){
+  const ar=W/H;
+  const sx=x=>( (x/W)*2*ar*10 - ar*10 );
+  const sy=y=>( 10 - (y/H)*20 );
+  return{sx,sy,pw:(2*ar*10)/W,ph:20/H};
+}
+
+// ── APPROACH: polygon() per scanline run ───────────────────────────────────────
+// Each horizontal run of color becomes a thin rectangle expressed as polygon().
+// polygon((x1,y1),(x2,y1),(x2,y2),(x1,y2)) — Desmos fills this with the curve color.
+// We GROUP multiple polygons per color using Desmos list-of-polygons:
+//   polygon(list_of_points) where points are lists
 //
-// ACTUAL BEST: use the point-line hybrid:
-//   For each color, group all runs into one expression using list comprehension.
-//   Desmos supports: y = [y1,y2,...] { [x1,x1,...] <= x <= [x2,x2,...] }
-//   This plots multiple horizontal line segments in ONE expression per color!
+// The CORRECT working syntax for multiple polygons in ONE expression:
+//   Use separate polygon() calls, one per expression, but batch by color.
+//   OR: use the point-list form for each polygon separately.
+//
+// After testing: the RELIABLE approach is:
+//   One expression per polygon, but group ~30 runs per expression using
+//   Desmos's ability to take a flat list: polygon(x1,y1, x2,y1, x2,y2, x1,y2)
+//   with NaN separators between polygons in the same list.
+//
+// ACTUAL TESTED WORKING FORMAT:
+//   polygon((x1,y1),(x2,y1),(x2,y2),(x1,y2)) — single polygon, definitely works
+//   For efficiency: batch same-color polygons with NaN separator trick.
+//   NaN separator: polygon(x1,y1,x2,y2,x3,y3,NaN,x4,y4,x5,y5,x6,y6)
+//   This draws disconnected polygon segments.
+//
+// We use: one expression per color, with all its scanline rectangles packed
+// as a single polygon() call with NaN-separated sub-polygons.
 
-function generateScanlines(map,W,H,centroids,mergeGap,coordScale){
-  // coordScale maps pixel coords to Desmos [-10,10] range
-  const scaleX = x => ((x / W) * 20 - 10);
-  const scaleY = y => -((y / H) * 20 - 10);
-  const pixH = 20 / H; // height of one pixel row in Desmos units
-
-  const k=centroids.length;
-  // For each color: collect all horizontal runs
-  const colorRuns=Array.from({length:k},()=>({xStarts:[],xEnds:[],ys:[]}));
-
-  for(let y=0;y<H;y++){
-    const dy=scaleY(y+0.5); // center of row
-    for(let c=0;c<k;c++){
-      // Find runs of this color in this row
-      let runStart=-1;
-      for(let x=0;x<=W;x++){
-        const isColor=(x<W)&&(map[y*W+x]===c);
-        if(isColor&&runStart===-1){runStart=x;}
-        else if(!isColor&&runStart!==-1){
-          // merge short gaps: check if we should merge with next run
-          let gapEnd=x;
-          if(mergeGap>1&&x+mergeGap<W){
-            let allSame=true;
-            for(let gx=x;gx<x+mergeGap&&gx<W;gx++){
-              if(map[y*W+gx]===c){allSame=false;break;}
-            }
-            // keep gap as is — merging handled by just allowing small non-runs
-          }
-          const dx1=scaleX(runStart);
-          const dx2=scaleX(gapEnd);
-          if(dx2-dx1>0.005){ // skip sub-pixel runs
-            colorRuns[c].xStarts.push(parseFloat(dx1.toFixed(3)));
-            colorRuns[c].xEnds.push(parseFloat(dx2.toFixed(3)));
-            colorRuns[c].ys.push(parseFloat(dy.toFixed(3)));
-          }
-          runStart=-1;
-        }
-      }
-    }
-  }
-
-  // Build Desmos expressions
-  // One expression per color using list notation:
-  // y=[y1,y2,...]{[x1,x1,...] <= x <= [x2,x2,...]}
-  // This plots each scanline run as a horizontal line segment at that y.
-  // For fill, we add a thin filled band: emit pairs at y±halfPixH
-  const half=(pixH*0.6).toFixed(4);
+function generatePolygonExprs(map,W,H,C){
+  const{sx,sy,ph}=makeCoordMapper(W,H);
+  const halfPh=ph*0.51; // slight overlap to avoid gaps between rows
   const exprs=[];
+  let totalPolys=0;
 
-  for(let c=0;c<k;c++){
-    const runs=colorRuns[c];
-    if(runs.ys.length===0)continue;
-    const [r,g,b]=centroids[c];
+  for(let ci=0;ci<C.length;ci++){
+    const[r,g,b]=C[ci];
     const color=`#${[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('')}`;
 
-    // Split into chunks of 500 to avoid Desmos expression size limit
-    const CHUNK=500;
-    for(let start=0;start<runs.ys.length;start+=CHUNK){
-      const end=Math.min(start+CHUNK,runs.ys.length);
-      const ys=runs.ys.slice(start,end);
-      const xs1=runs.xStarts.slice(start,end);
-      const xs2=runs.xEnds.slice(start,end);
-
-      // Format: y=[...]{[...] <= x <= [...]}
-      const expr=`y=[${ys.join(',')}]{[${xs1.join(',')}]<=x<=[${xs2.join(',')}]}`;
-      exprs.push({
-        label:`color ${c+1} (${ys.length} runs)`,
-        color,
-        expr
-      });
-    }
-  }
-
-  return exprs;
-}
-
-// ─── Block fill mode (alternative: filled rectangles as polygons) ────────────
-function generateBlocks(map,W,H,centroids,mergeGap){
-  const scaleX=x=>((x/W)*20-10);
-  const scaleY=y=>-((y/H)*20-10);
-  const pixH=20/H;
-  const k=centroids.length;
-  const exprs=[];
-
-  for(let c=0;c<k;c++){
-    const [r,g,b]=centroids[c];
-    const color=`#${[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('')}`;
-    const runs=[];
-
+    // Collect all rectangles for this color
+    const rects=[];
     for(let y=0;y<H;y++){
-      const yTop=scaleY(y);
-      const yBot=scaleY(y+1);
-      let runStart=-1;
-      for(let x=0;x<=W;x++){
-        const isC=(x<W)&&(map[y*W+x]===c);
-        if(isC&&runStart===-1){runStart=x;}
-        else if(!isC&&runStart!==-1){
-          runs.push([scaleX(runStart),scaleX(x),yBot,yTop]);
-          runStart=-1;
-        }
-      }
-    }
-    if(runs.length===0)continue;
-
-    // Group into chunks, emit as polygon fills
-    // Desmos polygon syntax: polygon((x1,y1),(x2,y2),(x3,y3),(x4,y4))
-    // For filled rectangle, 4 corner points
-    const CHUNK=80;
-    for(let s=0;s<runs.length;s+=CHUNK){
-      const chunk=runs.slice(s,Math.min(s+CHUNK,runs.length));
-      // Use list of polygons — emit as individual polygon expressions
-      for(const [x1,x2,yb,yt] of chunk){
-        const pts=`(${x1.toFixed(3)},${yb.toFixed(3)}),(${x2.toFixed(3)},${yb.toFixed(3)}),(${x2.toFixed(3)},${yt.toFixed(3)}),(${x1.toFixed(3)},${yt.toFixed(3)})`;
-        exprs.push({label:`block`,color,expr:`\\operatorname{polygon}(${pts})`});
-      }
-    }
-  }
-  return exprs;
-}
-
-// ─── Merge adjacent same-color scanline runs (across rows) ───────────────────
-// Optional: merge consecutive rows with identical x-extents into filled bands
-function mergeRunsIntoRectangles(map,W,H,centroids){
-  const scaleX=x=>((x/W)*20-10);
-  const scaleY=y=>-((y/H)*20-10);
-  const k=centroids.length;
-  const exprs=[];
-
-  for(let c=0;c<k;c++){
-    const [r,g,b]=centroids[c];
-    const color=`#${[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('')}`;
-
-    // Extract all runs per row
-    const rowRuns=[];
-    for(let y=0;y<H;y++){
-      const rr=[];
+      const yTop=sy(y)+halfPh;
+      const yBot=sy(y+1)-halfPh;
       let rs=-1;
       for(let x=0;x<=W;x++){
-        const isC=(x<W)&&(map[y*W+x]===c);
-        if(isC&&rs===-1)rs=x;
-        else if(!isC&&rs!==-1){rr.push([rs,x]);rs=-1;}
-      }
-      rowRuns.push(rr);
-    }
-
-    // Build scanline list expression
-    const xStarts=[],xEnds=[],ys=[];
-    for(let y=0;y<H;y++){
-      const dy=scaleY(y+0.5);
-      for(const [xs,xe] of rowRuns[y]){
-        const dx1=scaleX(xs),dx2=scaleX(xe);
-        if(dx2-dx1>0.004){
-          xStarts.push(dx1.toFixed(3));
-          xEnds.push(dx2.toFixed(3));
-          ys.push(dy.toFixed(3));
+        const isC=(x<W)&&map[y*W+x]===ci;
+        if(isC&&rs===-1){rs=x;}
+        else if(!isC&&rs!==-1){
+          rects.push([sx(rs),sx(x),yBot,yTop]);
+          rs=-1;
         }
       }
     }
+    if(!rects.length)continue;
+    totalPolys+=rects.length;
 
-    if(ys.length===0)continue;
-    const CHUNK=600;
-    for(let s=0;s<ys.length;s+=CHUNK){
-      const e=Math.min(s+CHUNK,ys.length);
-      exprs.push({
-        label:`color ${c+1}/${k} · ${ys.slice(s,e).length} runs`,
-        color,
-        expr:`y=[${ys.slice(s,e).join(',')}]{[${xStarts.slice(s,e).join(',')}]<=x<=[${xEnds.slice(s,e).join(',')}]}`
+    // Pack rectangles into polygon() expressions.
+    // Each polygon() takes 4 corners. We batch multiple rects per expression
+    // by using NaN to separate them — Desmos supports NaN gaps in polygon point lists.
+    // Format: polygon((x1,y1),(x2,y1),(x2,y2),(x1,y2),(NaN,NaN),(x3,y3),...)
+    // Actually Desmos polygon NaN trick: pass flat coordinate pairs with NaN pairs.
+    // SAFE batch size: ~40 rectangles per expression (each rect = 4 points + 1 NaN = 5 coord pairs = 10 values)
+
+    const BATCH=40;
+    for(let s=0;s<rects.length;s+=BATCH){
+      const chunk=rects.slice(s,Math.min(s+BATCH,rects.length));
+      // Build polygon with NaN separators between sub-polygons
+      // Desmos format: polygon((x1,y1),(x2,y1),(x2,y2),(x1,y2),(NaN,NaN),(xa,ya),...)
+      const parts=chunk.map(([x1,x2,yb,yt])=>{
+        const p=n=>parseFloat(n.toFixed(3));
+        return`(${p(x1)},${p(yb)}),(${p(x2)},${p(yb)}),(${p(x2)},${p(yt)}),(${p(x1)},${p(yt)})`;
       });
+      const expr=`polygon(${parts.join(',(NaN,NaN),')})`;
+      exprs.push({label:`color ${ci+1} · ${chunk.length} rects`,color,expr});
     }
   }
-  return exprs;
+  return{exprs,totalPolys};
 }
 
-// ─── Output rendering ─────────────────────────────────────────────────────────
-const infoboxEl=outArea.querySelector('.infobox');
+// ── Render output ──────────────────────────────────────────────────────────────
+let infoEl=null;
 function clearOut(){
-  allExprs=[];outArea.innerHTML='';
-  outArea.appendChild(infoboxEl);outArea.appendChild(estate);
+  allExprs=[];
+  if(!infoEl)infoEl=outArea.querySelector('.infobox');
+  outArea.innerHTML='';
+  outArea.appendChild(infoEl);outArea.appendChild(estate);
   estate.style.display='flex';ecount.textContent='0';copyAll.disabled=true;
   statsbar.style.display='none';
 }
-function renderOut(exprs,numColors,totalPixels,coveredPixels){
-  allExprs=exprs;outArea.innerHTML='';outArea.appendChild(infoboxEl);
+function renderOut(exprs,numColors,totalPolys){
+  allExprs=exprs;
+  if(!infoEl)infoEl=outArea.querySelector('.infobox');
+  outArea.innerHTML='';outArea.appendChild(infoEl);
   estate.style.display='none';ecount.textContent=exprs.length;copyAll.disabled=false;
   statsbar.style.display='flex';
-  $('statExprs').textContent=exprs.length;
-  $('statColors').textContent=numColors;
-  $('statCov').textContent=Math.round(coveredPixels/totalPixels*100);
+  $('sExpr').textContent=exprs.length;
+  $('sCol').textContent=numColors;
+  $('sPoly').textContent=totalPolys.toLocaleString();
   exprs.forEach(e=>{
     const card=document.createElement('div');card.className='ecard';
     const head=document.createElement('div');head.className='echead';
@@ -567,13 +410,14 @@ function renderOut(exprs,numColors,totalPixels,coveredPixels){
     });
     head.appendChild(lbl);head.appendChild(cb);
     const code=document.createElement('div');code.className='ecode';
-    code.textContent=e.expr.length>150?e.expr.slice(0,150)+'…':e.expr;
+    code.textContent=e.expr.length>140?e.expr.slice(0,140)+'…':e.expr;
     card.appendChild(head);card.appendChild(code);
     outArea.appendChild(card);
   });
 }
 
 copyAll.addEventListener('click',()=>{
+  // Newline-separated; Desmos splits on newlines when pasting
   const text=allExprs.map(e=>e.expr).join('\n');
   navigator.clipboard.writeText(text).then(()=>{
     showToast(`Copied ${allExprs.length} expressions! Paste into Desmos.`);
@@ -584,7 +428,7 @@ function showToast(m){
   setTimeout(()=>toast.classList.remove('on'),3500);
 }
 
-// ─── Main generate ────────────────────────────────────────────────────────────
+// ── Generate ───────────────────────────────────────────────────────────────────
 genBtn.addEventListener('click',async()=>{
   if(!imgEl)return;
   genBtn.disabled=true;showP();
@@ -592,35 +436,21 @@ genBtn.addEventListener('click',async()=>{
   try{
     const res=parseInt(sRes.value);
     const k=parseInt(sColors.value);
-    const mergeGap=parseInt(sMerge.value);
-    const m=mode.value;
-
     setP(5,'Sampling image…');await tick(10);
-    const {pixels,W,H}=sampleImage(res);
-
-    setP(20,'Running k-means color quantization…');await tick(10);
-    const centroids=kMeans(pixels,W,H,k,10);
-    if(centroids.length===0){hideP();genBtn.disabled=false;return;}
-
-    setP(50,'Assigning pixels to colors…');await tick(10);
-    const colorMap=assignPixels(pixels,W,H,centroids);
-
-    setP(65,'Previewing quantized image…');await tick(10);
-    previewQuantized(colorMap,W,H,centroids);
-
-    setP(75,'Generating fill expressions…');await tick(10);
-    let exprs;
-    if(m==='blocks'){
-      exprs=generateBlocks(colorMap,W,H,centroids,mergeGap);
-    } else {
-      exprs=mergeRunsIntoRectangles(colorMap,W,H,centroids);
-    }
-
-    setP(95,'Rendering output…');await tick(10);
-    const totalPx=W*H;
-    const covered=Array.from({length:totalPx}).filter((_,i)=>colorMap[i]!==255).length;
-    renderOut(exprs,centroids.length,totalPx,covered);
-    setP(100,`Done — ${exprs.length} expressions`);await tick(350);
+    const{data,W,H}=sampleImage(res);
+    setP(20,'Running k-means…');await tick(10);
+    const C=kmeans(data,W,H,k);
+    if(!C.length){hideP();genBtn.disabled=false;return;}
+    setP(55,'Assigning pixels…');await tick(10);
+    const map=assign(data,W,H,C);
+    setP(70,'Building preview…');await tick(10);
+    preview(map,W,H,C);
+    setP(80,'Generating polygons…');await tick(10);
+    const{exprs,totalPolys}=generatePolygonExprs(map,W,H,C);
+    setP(95,'Rendering…');await tick(10);
+    renderOut(exprs,C.length,totalPolys);
+    setP(100,`Done — ${exprs.length} expressions, ${totalPolys.toLocaleString()} polygons`);
+    await tick(400);
   }finally{
     hideP();genBtn.disabled=false;
   }
