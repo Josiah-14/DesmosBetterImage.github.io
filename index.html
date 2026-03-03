@@ -292,58 +292,68 @@ function previewQ(map,W,H,C){
 }
 
 // ── Build Desmos state JSON ────────────────────────────────────────────────────
-// Each expression is a polygon with 4 corners (a rectangle).
-// We use one polygon() per scanline run — each run is a solid colored square/rect.
-// polygon((x1,y1),(x2,y1),(x2,y2),(x1,y2)) — 4 corners, no NaN tricks needed.
-// Color is set via the expression's color property in the Desmos state JSON.
-//
-// The Desmos calculator state format:
-// { version: 9, expressions: { list: [ { type:'expression', id:'1', latex:'...', color:'#rrggbb' }, ... ] } }
-//
-// We inject this via the Desmos API: Calc.setState(state)
-// The bookmarklet runs this JS on the desmos.com/calculator page.
+// Low res (<150): one polygon per scanline run.
+// High res (>=150): vertical merge — adjacent rows with identical run extents
+// get collapsed into one tall rectangle, slashing expression count massively.
 
 function buildDesmosState(map,W,H,C,canvasHalfSize){
   const expressions=[];
   let id=1;
-
-  // Pixel size in Desmos units
   const ar=W/H;
   const halfW=canvasHalfSize*ar;
   const halfH=canvasHalfSize;
-  const pw=(halfW*2)/W; // width of one pixel
-  const ph=(halfH*2)/H; // height of one pixel
+  const pw=(halfW*2)/W;
+  const ph=(halfH*2)/H;
+  const sx=x=>-halfW+x*pw;
+  const sy=y=> halfH-y*ph;
+  const p=v=>Math.round(v*1000)/1000;
+  const doMerge=W>=150;
 
-  const sx=x=>( -halfW + x*pw );
-  const sy=y=>(  halfH - y*ph );
+  function emit(x1,x2,yTop,yBot,color){
+    const ax1=p(sx(x1)),ax2=p(sx(x2));
+    const ay1=p(sy(yBot)),ay2=p(sy(yTop));
+    const latex=`\\operatorname{polygon}\\left(\\left(${ax1},${ay1}\\right),\\left(${ax2},${ay1}\\right),\\left(${ax2},${ay2}\\right),\\left(${ax1},${ay2}\\right)\\right)`;
+    expressions.push({type:'expression',id:String(id++),latex,color,fillOpacity:'1',lineOpacity:'0',lineWidth:'0'});
+  }
 
-  // For each color, collect scanline runs and emit individual polygon expressions
   for(let ci=0;ci<C.length;ci++){
     const[r,g,b]=C[ci];
     const color=`#${[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('')}`;
 
-    for(let y=0;y<H;y++){
-      let rs=-1;
-      for(let x=0;x<=W;x++){
-        const isC=(x<W)&&map[y*W+x]===ci;
-        if(isC&&rs===-1){rs=x;}
-        else if(!isC&&rs!==-1){
-          // Rectangle from (rs, y) to (x, y+1) in pixel coords
-          const x1=sx(rs), x2=sx(x);
-          const y1=sy(y+1), y2=sy(y); // y2 > y1 (top)
-          const p=v=>Math.round(v*1000)/1000;
-          // One polygon per run — clean, no errors
-          const latex=`\\operatorname{polygon}\\left(\\left(${p(x1)},${p(y1)}\\right),\\left(${p(x2)},${p(y1)}\\right),\\left(${p(x2)},${p(y2)}\\right),\\left(${p(x1)},${p(y2)}\\right)\\right)`;
-          expressions.push({
-            type:'expression',
-            id:String(id++),
-            latex,
-            color,
-            fillOpacity:'1',
-            lineOpacity:'0',
-            lineWidth:'0'
-          });
-          rs=-1;
+    if(!doMerge){
+      for(let y=0;y<H;y++){
+        let rs=-1;
+        for(let x=0;x<=W;x++){
+          const isC=(x<W)&&map[y*W+x]===ci;
+          if(isC&&rs===-1){rs=x;}
+          else if(!isC&&rs!==-1){emit(rs,x,y,y+1,color);rs=-1;}
+        }
+      }
+    } else {
+      // Vertical merge: track active runs as Map<"xs,xe" -> startY>
+      // Each new row: runs that match carry forward, gone ones get flushed as rectangles.
+      let prev=new Map();
+      for(let y=0;y<=H;y++){
+        const cur=new Map();
+        if(y<H){
+          let rs=-1;
+          for(let x=0;x<=W;x++){
+            const isC=(x<W)&&map[y*W+x]===ci;
+            if(isC&&rs===-1){rs=x;}
+            else if(!isC&&rs!==-1){cur.set(rs+','+x,true);rs=-1;}
+          }
+        }
+        // Flush prev runs that don't appear in cur
+        for(const[key,startY] of prev){
+          if(!cur.has(key)){
+            const[xs,xe]=key.split(',').map(Number);
+            emit(xs,xe,startY,y,color);
+            prev.delete(key);
+          }
+        }
+        // Start tracking new runs in cur
+        for(const key of cur.keys()){
+          if(!prev.has(key)) prev.set(key,y);
         }
       }
     }
@@ -351,10 +361,11 @@ function buildDesmosState(map,W,H,C,canvasHalfSize){
 
   return{
     version:9,
-    graph:{viewport:{xmin:-canvasHalfSize*ar*1.1,ymin:-canvasHalfSize*1.1,xmax:canvasHalfSize*ar*1.1,ymax:canvasHalfSize*1.1}},
+    graph:{viewport:{xmin:-halfW*1.05,ymin:-halfH*1.05,xmax:halfW*1.05,ymax:halfH*1.05}},
     expressions:{list:expressions}
   };
 }
+
 
 // ── Build bookmarklet ─────────────────────────────────────────────────────────
 function buildBookmarklet(state){
