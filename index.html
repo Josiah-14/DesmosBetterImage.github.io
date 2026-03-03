@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image → Desmos</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08090c;
+  --surface:#0f1117;
+  --surface2:#161820;
+  --border:#1e2130;
+  --border2:#2a2f45;
+  --accent:#5dffb0;
+  --accent2:#ff5d8f;
+  --accent3:#5d9fff;
+  --text:#dde3f0;
+  --muted:#6b7394;
+  --mono:'Syne Mono',monospace;
+  --sans:'Syne',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  min-height:100vh;
+  display:grid;
+  grid-template-rows:auto 1fr;
+}
+header{
+  padding:22px 36px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+.logo{font-size:1.15rem;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+.logo .arrow{color:var(--accent);font-size:1.4rem}
+.logo .d{color:var(--accent3)}
+.tagline{font-size:.78rem;color:var(--muted);font-family:var(--mono)}
+main{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 65px);overflow:hidden}
+.left{border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.panel-header{
+  padding:16px 24px;border-bottom:1px solid var(--border);
+  font-size:.72rem;font-family:var(--mono);color:var(--muted);
+  text-transform:uppercase;letter-spacing:.12em;
+  display:flex;align-items:center;gap:8px;
+}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.upload-zone{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:16px;cursor:pointer;
+  border:2px dashed var(--border2);margin:24px;border-radius:12px;
+  transition:.2s;position:relative;overflow:hidden;
+}
+.upload-zone:hover{border-color:var(--accent);background:rgba(93,255,176,.03)}
+.upload-zone.dragging{border-color:var(--accent);background:rgba(93,255,176,.07)}
+.upload-icon{font-size:2.5rem;opacity:.4}
+.upload-text{font-size:.85rem;color:var(--muted);text-align:center;line-height:1.6}
+.upload-text strong{color:var(--accent);font-weight:700}
+#fileInput{display:none}
+#previewContainer{display:none;flex-direction:column;height:100%;overflow:hidden}
+.preview-top{position:relative;flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000}
+#previewImg{max-width:100%;max-height:100%;object-fit:contain;opacity:.85}
+#edgeCanvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;display:none}
+.preview-controls{padding:16px 24px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:12px}
+.control-row{display:flex;align-items:center;gap:12px}
+.control-row label{font-size:.72rem;font-family:var(--mono);color:var(--muted);min-width:120px}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:3px;background:var(--border2);border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 8px rgba(93,255,176,.5)}
+.range-val{font-family:var(--mono);font-size:.72rem;color:var(--accent);min-width:28px;text-align:right}
+.btn-row{display:flex;gap:10px;margin-top:4px}
+button{font-family:var(--sans);font-size:.78rem;font-weight:700;padding:9px 18px;border-radius:7px;border:none;cursor:pointer;transition:.15s;letter-spacing:.02em}
+.btn-primary{background:var(--accent);color:#08090c;flex:1}
+.btn-primary:hover{background:#7dffbe;transform:translateY(-1px)}
+.btn-primary:disabled{background:var(--border2);color:var(--muted);cursor:not-allowed;transform:none}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
+.btn-secondary:hover{border-color:var(--muted)}
+.right{display:flex;flex-direction:column;overflow:hidden}
+.output-header{padding:14px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.output-title{font-size:.72rem;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;display:flex;align-items:center;gap:8px}
+.expr-count{background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:2px 10px;font-size:.68rem;font-family:var(--mono);color:var(--accent)}
+.copy-all-btn{background:var(--accent2);color:#fff;font-size:.72rem;padding:7px 16px;border-radius:6px}
+.copy-all-btn:hover{background:#ff7daa}
+.copy-all-btn:disabled{background:var(--border2);color:var(--muted);cursor:not-allowed}
+#outputArea{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px}
+#outputArea::-webkit-scrollbar{width:4px}
+#outputArea::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.empty-state{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;opacity:.4}
+.empty-icon{font-size:3rem}
+.empty-text{font-size:.85rem;color:var(--muted);text-align:center}
+.expr-group{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.expr-group-header{padding:8px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface2)}
+.group-label{font-size:.68rem;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;gap:6px}
+.group-color-dot{width:8px;height:8px;border-radius:50%;box-shadow:0 0 6px currentColor}
+.copy-group-btn{background:transparent;border:1px solid var(--border2);color:var(--muted);font-size:.65rem;padding:4px 10px;border-radius:4px;font-family:var(--mono)}
+.copy-group-btn:hover{border-color:var(--accent);color:var(--accent)}
+.copy-group-btn.copied{border-color:var(--accent);color:var(--accent);background:rgba(93,255,176,.07)}
+.expr-code{padding:10px 14px;font-family:var(--mono);font-size:.7rem;color:var(--text);line-height:1.5;overflow-x:auto;white-space:pre;max-height:80px;overflow-y:hidden}
+.expr-code::-webkit-scrollbar{height:3px}
+.expr-code::-webkit-scrollbar-thumb{background:var(--border2)}
+.progress-overlay{display:none;position:fixed;inset:0;background:rgba(8,9,12,.85);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+.progress-overlay.show{display:flex}
+.progress-box{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:32px 48px;display:flex;flex-direction:column;align-items:center;gap:16px;min-width:280px}
+.progress-label{font-size:.85rem;color:var(--muted);font-family:var(--mono)}
+.progress-bar-wrap{width:100%;height:4px;background:var(--border2);border-radius:2px;overflow:hidden}
+.progress-bar{height:100%;background:var(--accent);border-radius:2px;transition:width .1s;box-shadow:0 0 12px var(--accent)}
+.progress-step{font-size:.72rem;color:var(--accent);font-family:var(--mono)}
+.instructions{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:14px 18px;font-size:.75rem;line-height:1.7;color:var(--muted)}
+.instructions strong{color:var(--accent3)}
+.instructions ol{padding-left:18px}
+.instructions li{margin-bottom:4px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--accent);color:#08090c;font-weight:700;font-size:.78rem;padding:10px 20px;border-radius:8px;z-index:200;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+select{background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:5px 10px;font-family:var(--mono);font-size:.72rem;outline:none;flex:1}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span>img</span>
+    <span class="arrow">→</span>
+    <span class="d">desmos</span>
+  </div>
+  <div class="tagline">full-color shading · edge contours · copy-ready</div>
+</header>
+
+<main>
+  <!-- LEFT PANEL -->
+  <div class="left">
+    <div class="panel-header"><div class="dot"></div>input</div>
+    <div class="upload-zone" id="uploadZone">
+      <div id="uploadPrompt" style="text-align:center">
+        <div class="upload-icon">🖼️</div>
+        <div class="upload-text" style="margin-top:12px">
+          <strong>Drop image here</strong> or click to browse<br>
+          PNG · JPG · WebP
+        </div>
+      </div>
+      <div id="previewContainer">
+        <div class="preview-top">
+          <img id="previewImg" alt="preview"/>
+          <canvas id="edgeCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+    <input type="file" id="fileInput" accept="image/*">
+
+    <div class="preview-controls" id="previewControls" style="display:none">
+      <div class="control-row">
+        <label>Detail level</label>
+        <input type="range" id="detailSlider" min="60" max="400" value="200">
+        <span class="range-val" id="detailVal">200</span>
+      </div>
+      <div class="control-row">
+        <label>Edge threshold</label>
+        <input type="range" id="edgeSlider" min="5" max="80" value="22">
+        <span class="range-val" id="edgeVal">22</span>
+      </div>
+      <div class="control-row">
+        <label>Shade bands</label>
+        <input type="range" id="shadeSlider" min="3" max="14" value="8">
+        <span class="range-val" id="shadeVal">8</span>
+      </div>
+      <div class="control-row">
+        <label>Color mode</label>
+        <select id="colorMode">
+          <option value="color">Full color</option>
+          <option value="grayscale">Grayscale</option>
+          <option value="edges">Edges only</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" id="generateBtn">Generate Desmos</button>
+        <button class="btn-secondary" id="resetBtn">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right">
+    <div class="output-header">
+      <div class="output-title">
+        <div class="dot" style="background:var(--accent3)"></div>
+        expressions
+        <span class="expr-count" id="exprCount">0</span>
+      </div>
+      <button class="copy-all-btn" id="copyAllBtn" disabled>⎘ Copy All to Desmos</button>
+    </div>
+
+    <div id="outputArea">
+      <div class="instructions" id="instructions">
+        <strong>How to use in Desmos:</strong>
+        <ol>
+          <li>Upload an image &amp; click <strong style="color:var(--accent)">Generate Desmos</strong></li>
+          <li>Click <strong style="color:var(--accent2)">⎘ Copy All to Desmos</strong></li>
+          <li>Open <strong>desmos.com/calculator</strong></li>
+          <li>Click an expression box → press <strong>Ctrl+V</strong> (or Cmd+V on Mac)</li>
+          <li>Desmos will split each line into a separate expression automatically</li>
+        </ol>
+        <br>
+        <strong style="color:var(--muted)">Tips for better results:</strong> Use images with clear contrast. Lower edge threshold = more detail. More shade bands = richer color.
+      </div>
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">📐</div>
+        <div class="empty-text">Generated expressions will appear here</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="progress-overlay" id="progressOverlay">
+  <div class="progress-box">
+    <div class="progress-label" id="progressLabel">Processing image…</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progressBar" style="width:0%"></div>
+    </div>
+    <div class="progress-step" id="progressStep">0%</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<canvas id="workCanvas" style="display:none"></canvas>
+
+<script>
+let imgEl = null;
+let allExpressions = [];
+
+const uploadZone     = document.getElementById('uploadZone');
+const uploadPrompt   = document.getElementById('uploadPrompt');
+const previewCont    = document.getElementById('previewContainer');
+const fileInput      = document.getElementById('fileInput');
+const previewImg     = document.getElementById('previewImg');
+const previewCtrls   = document.getElementById('previewControls');
+const generateBtn    = document.getElementById('generateBtn');
+const resetBtn       = document.getElementById('resetBtn');
+const copyAllBtn     = document.getElementById('copyAllBtn');
+const outputArea     = document.getElementById('outputArea');
+const emptyState     = document.getElementById('emptyState');
+const exprCount      = document.getElementById('exprCount');
+const workCanvas     = document.getElementById('workCanvas');
+const edgeCanvas     = document.getElementById('edgeCanvas');
+const progressOvl    = document.getElementById('progressOverlay');
+const progressBar    = document.getElementById('progressBar');
+const progressLabel  = document.getElementById('progressLabel');
+const progressStep   = document.getElementById('progressStep');
+const toast          = document.getElementById('toast');
+const instructions   = document.getElementById('instructions');
+
+const detailSlider = document.getElementById('detailSlider');
+const edgeSlider   = document.getElementById('edgeSlider');
+const shadeSlider  = document.getElementById('shadeSlider');
+const colorMode    = document.getElementById('colorMode');
+
+[detailSlider, edgeSlider, shadeSlider].forEach(s => {
+  const id = s.id.replace('Slider','Val');
+  s.addEventListener('input', () => document.getElementById(id).textContent = s.value);
+});
+
+// Upload
+uploadZone.addEventListener('click', () => { if (!imgEl) fileInput.click(); });
+fileInput.addEventListener('change', e => loadFile(e.target.files[0]));
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragging'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragging'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault(); uploadZone.classList.remove('dragging');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) loadFile(f);
+});
+
+function loadFile(file) {
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  imgEl = new Image();
+  imgEl.onload = () => {
+    previewImg.src = url;
+    uploadPrompt.style.display = 'none';
+    previewCont.style.cssText = 'display:flex;flex-direction:column;height:100%;overflow:hidden';
+    Object.assign(uploadZone.style, { cursor:'default', border:'none', margin:'0', borderRadius:'0', padding:'0' });
+    previewCtrls.style.display = 'flex';
+  };
+  imgEl.src = url;
+}
+
+resetBtn.addEventListener('click', () => {
+  imgEl = null; fileInput.value = ''; previewImg.src = '';
+  uploadPrompt.style.display = '';
+  previewCont.style.cssText = 'display:none';
+  Object.assign(uploadZone.style, { cursor:'', border:'', margin:'', borderRadius:'', padding:'' });
+  previewCtrls.style.display = 'none';
+  edgeCanvas.style.display = 'none';
+  clearOutput();
+});
+
+// Progress
+const setProgress = (pct, lbl) => {
+  progressBar.style.width = pct + '%';
+  if (lbl) progressLabel.textContent = lbl;
+  progressStep.textContent = Math.round(pct) + '%';
+};
+const showProg = () => progressOvl.classList.add('show');
+const hideProg = () => progressOvl.classList.remove('show');
+
+// ── Pixel helpers ──────────────────────────────────────────────────────────────
+function getPixels(size) {
+  const ctx = workCanvas.getContext('2d', { willReadFrequently: true });
+  const asp = imgEl.naturalWidth / imgEl.naturalHeight;
+  let W, H;
+  if (asp >= 1) { W = size; H = Math.round(size / asp); }
+  else { H = size; W = Math.round(size * asp); }
+  workCanvas.width = W; workCanvas.height = H;
+  ctx.drawImage(imgEl, 0, 0, W, H);
+  return { data: ctx.getImageData(0, 0, W, H).data, W, H };
+}
+
+// ── Sobel edge detection ───────────────────────────────────────────────────────
+function sobelEdges(data, W, H) {
+  const gray = new Float32Array(W * H);
+  for (let i = 0; i < W * H; i++) {
+    const o = i * 4;
+    gray[i] = 0.299 * data[o] + 0.587 * data[o+1] + 0.114 * data[o+2];
+  }
+  const out = new Float32Array(W * H);
+  for (let y = 1; y < H-1; y++) {
+    for (let x = 1; x < W-1; x++) {
+      const g = (dx,dy) => gray[(y+dy)*W+(x+dx)];
+      const gx = -g(-1,-1)+g(1,-1)-2*g(-1,0)+2*g(1,0)-g(-1,1)+g(1,1);
+      const gy = -g(-1,-1)-2*g(0,-1)-g(1,-1)+g(-1,1)+2*g(0,1)+g(1,1);
+      out[y*W+x] = Math.sqrt(gx*gx+gy*gy);
+    }
+  }
+  return out;
+}
+
+// ── Douglas-Peucker ────────────────────────────────────────────────────────────
+function dp(pts, eps) {
+  if (pts.length <= 2) return pts;
+  let maxD = 0, idx = 0;
+  const [x1,y1] = pts[0], [x2,y2] = pts[pts.length-1];
+  const len = Math.hypot(x2-x1,y2-y1) || 1e-9;
+  for (let i = 1; i < pts.length-1; i++) {
+    const d = Math.abs((y2-y1)*pts[i][0]-(x2-x1)*pts[i][1]+x2*y1-y2*x1)/len;
+    if (d > maxD) { maxD = d; idx = i; }
+  }
+  if (maxD > eps) return [...dp(pts.slice(0,idx+1),eps).slice(0,-1), ...dp(pts.slice(idx),eps)];
+  return [pts[0], pts[pts.length-1]];
+}
+
+// ── Contour tracing ────────────────────────────────────────────────────────────
+function traceContours(edges, W, H, thresh, max) {
+  const visited = new Uint8Array(W * H);
+  const contours = [];
+  const dirs = [[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]];
+  for (let y = 1; y < H-1; y++) {
+    for (let x = 1; x < W-1; x++) {
+      if (edges[y*W+x] > thresh && !visited[y*W+x]) {
+        const pts = []; let cx = x, cy = y;
+        for (let s = 0; s < 3000; s++) {
+          const ci = cy*W+cx;
+          if (visited[ci]) break;
+          visited[ci] = 1;
+          pts.push([cx, cy]);
+          let moved = false;
+          for (const [dx,dy] of dirs) {
+            const nx=cx+dx, ny=cy+dy;
+            if (nx<0||nx>=W||ny<0||ny>=H) continue;
+            if (edges[ny*W+nx] > thresh && !visited[ny*W+nx]) {
+              cx=nx; cy=ny; moved=true; break;
+            }
+          }
+          if (!moved) break;
+        }
+        if (pts.length > 3) contours.push(pts);
+        if (contours.length >= max) return contours;
+      }
+    }
+  }
+  return contours;
+}
+
+// ── Color sampling per band ────────────────────────────────────────────────────
+function sampleBands(data, W, H, nBands) {
+  const bands = Array.from({length: nBands}, () => ({ pts: [], r:0,g:0,b:0,n:0 }));
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const i = y*W+x, o = i*4;
+      const r=data[o],g=data[o+1],b=data[o+2],a=data[o+3];
+      if (a < 100) continue;
+      const bright = (0.299*r+0.587*g+0.114*b)/255;
+      const bi = Math.min(nBands-1, Math.floor(bright*nBands));
+      const dx = (x/W)*20-10;
+      const dy = -((y/H)*20-10);
+      bands[bi].pts.push([dx,dy]);
+      bands[bi].r+=r; bands[bi].g+=g; bands[bi].b+=b; bands[bi].n++;
+    }
+  }
+  return bands.map(b => ({
+    pts: b.pts,
+    color: b.n > 0 ? rgbHex(Math.round(b.r/b.n), Math.round(b.g/b.n), Math.round(b.b/b.n)) : '#888'
+  }));
+}
+
+function rgbHex(r,g,b) {
+  return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+
+// ── Desmos list expression builder ────────────────────────────────────────────
+// Desmos format: plot list of points as (listX, listY)
+function ptsToExpr(pts, maxPts) {
+  const step = Math.max(1, Math.floor(pts.length / maxPts));
+  const sampled = pts.filter((_,i) => i % step === 0);
+  const xs = sampled.map(p => p[0].toFixed(2)).join(',');
+  const ys = sampled.map(p => p[1].toFixed(2)).join(',');
+  return `(${xs})\n(${ys})`;
+}
+
+function contoursToExprs(contours, W, H, maxContours, edgeColor) {
+  const sx = x => ((x/W)*20-10).toFixed(3);
+  const sy = y => (-((y/H)*20-10)).toFixed(3);
+  const result = [];
+  for (const pts of contours.slice(0, maxContours)) {
+    const simp = dp(pts, 0.6);
+    if (simp.length < 2) continue;
+    result.push({
+      label: 'edge contour',
+      color: edgeColor || '#00ff88',
+      code: `(${simp.map(p=>sx(p[0])).join(',')})\n(${simp.map(p=>sy(p[1])).join(',')})`
+    });
+  }
+  return result;
+}
+
+// ── Main generation ────────────────────────────────────────────────────────────
+function buildExpressions(data, W, H, opts) {
+  const { edgeThresh, numBands, mode } = opts;
+  const edges = sobelEdges(data, W, H);
+  const exprs = [];
+
+  if (mode === 'edges') {
+    const contours = traceContours(edges, W, H, edgeThresh, 250);
+    exprs.push(...contoursToExprs(contours, W, H, 250, '#00ff88'));
+  } else if (mode === 'grayscale') {
+    const bands = sampleBands(data, W, H, numBands);
+    bands.forEach((band, i) => {
+      if (!band.pts.length) return;
+      const v = Math.round((i/(numBands-1))*255);
+      exprs.push({ label: `gray band ${i+1}/${numBands}`, color: rgbHex(v,v,v), code: ptsToExpr(band.pts, 800) });
+    });
+    const contours = traceContours(edges, W, H, edgeThresh, 150);
+    exprs.push(...contoursToExprs(contours, W, H, 150, '#000000'));
+  } else {
+    // Full color
+    const bands = sampleBands(data, W, H, numBands);
+    bands.forEach((band, i) => {
+      if (!band.pts.length) return;
+      exprs.push({ label: `color band ${i+1}/${numBands}`, color: band.color, code: ptsToExpr(band.pts, 900) });
+    });
+    // Edge contours colored from image
+    const contours = traceContours(edges, W, H, edgeThresh, 200);
+    const sx = x => ((x/W)*20-10).toFixed(3);
+    const sy = y => (-((y/H)*20-10)).toFixed(3);
+    for (const pts of contours) {
+      const simp = dp(pts, 0.6);
+      if (simp.length < 2) continue;
+      const mp = pts[Math.floor(pts.length/2)];
+      const mi = (Math.round(mp[1])*W + Math.round(mp[0]))*4;
+      const ec = rgbHex(Math.max(0,data[mi]-50), Math.max(0,data[mi+1]-50), Math.max(0,data[mi+2]-50));
+      exprs.push({ label: 'edge', color: ec, code: `(${simp.map(p=>sx(p[0])).join(',')})\n(${simp.map(p=>sy(p[1])).join(',')})` });
+    }
+  }
+  return exprs;
+}
+
+// ── Render output ──────────────────────────────────────────────────────────────
+function clearOutput() {
+  allExpressions = [];
+  outputArea.innerHTML = '';
+  outputArea.appendChild(instructions);
+  outputArea.appendChild(emptyState);
+  emptyState.style.display = 'flex';
+  exprCount.textContent = '0';
+  copyAllBtn.disabled = true;
+}
+
+function renderOutput(exprs) {
+  allExpressions = exprs;
+  outputArea.innerHTML = '';
+  outputArea.appendChild(instructions);
+  if (!exprs.length) { outputArea.appendChild(emptyState); emptyState.style.display='flex'; return; }
+  emptyState.style.display = 'none';
+  exprCount.textContent = exprs.length;
+  copyAllBtn.disabled = false;
+
+  exprs.forEach((expr, i) => {
+    const g = document.createElement('div'); g.className = 'expr-group';
+    const hdr = document.createElement('div'); hdr.className = 'expr-group-header';
+    const lbl = document.createElement('span'); lbl.className = 'group-label';
+    const cdot = document.createElement('span'); cdot.className = 'group-color-dot';
+    cdot.style.background = expr.color; cdot.style.color = expr.color;
+    lbl.appendChild(cdot); lbl.appendChild(document.createTextNode(expr.label));
+    const cb = document.createElement('button'); cb.className = 'copy-group-btn'; cb.textContent = 'copy';
+    cb.addEventListener('click', () => {
+      navigator.clipboard.writeText(expr.code).then(() => {
+        cb.textContent = '✓'; cb.classList.add('copied');
+        setTimeout(() => { cb.textContent = 'copy'; cb.classList.remove('copied'); }, 1500);
+      });
+    });
+    hdr.appendChild(lbl); hdr.appendChild(cb);
+    const code = document.createElement('div'); code.className = 'expr-code';
+    code.textContent = expr.code.length > 180 ? expr.code.slice(0,180)+'…' : expr.code;
+    g.appendChild(hdr); g.appendChild(code);
+    outputArea.appendChild(g);
+  });
+}
+
+copyAllBtn.addEventListener('click', () => {
+  const text = allExpressions.map(e => e.code).join('\n');
+  navigator.clipboard.writeText(text).then(() => showToast('Copied! Paste into any Desmos expression box.'));
+});
+
+function showToast(msg) {
+  toast.textContent = msg; toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ── Edge preview overlay ───────────────────────────────────────────────────────
+function showEdgePreview(data, W, H, thresh) {
+  edgeCanvas.width = W; edgeCanvas.height = H;
+  const ctx = edgeCanvas.getContext('2d');
+  const edges = sobelEdges(data, W, H);
+  const id = ctx.createImageData(W, H);
+  for (let i = 0; i < W*H; i++) {
+    const v = edges[i]; const o = i*4;
+    id.data[o] = 93; id.data[o+1] = 255; id.data[o+2] = 176;
+    id.data[o+3] = v > thresh ? Math.min(255, v*1.8) : 0;
+  }
+  ctx.putImageData(id, 0, 0);
+  edgeCanvas.style.display = 'block';
+}
+
+// ── Generate ───────────────────────────────────────────────────────────────────
+generateBtn.addEventListener('click', async () => {
+  if (!imgEl) return;
+  generateBtn.disabled = true;
+  showProg();
+  await tick(30);
+  try {
+    const detailPx  = parseInt(detailSlider.value);
+    const edgeThresh = parseInt(edgeSlider.value);
+    const numBands   = parseInt(shadeSlider.value);
+    const mode       = colorMode.value;
+
+    setProgress(10, 'Sampling pixels…'); await tick(10);
+    const { data, W, H } = getPixels(detailPx);
+    setProgress(30, 'Running edge detection…'); await tick(10);
+    setProgress(55, 'Building color bands…'); await tick(10);
+    const exprs = buildExpressions(data, W, H, { edgeThresh, numBands, mode });
+    setProgress(85, 'Formatting expressions…'); await tick(10);
+    renderOutput(exprs);
+    showEdgePreview(data, W, H, edgeThresh);
+    setProgress(100, `Done! ${exprs.length} expressions`); await tick(400);
+  } finally {
+    hideProg();
+    generateBtn.disabled = false;
+  }
+});
+
+function tick(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>
