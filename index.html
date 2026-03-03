@@ -75,7 +75,7 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
 .step-txt strong{color:var(--text)}
 .bm-drag{background:var(--accent2);color:#fff;font-size:.7rem;padding:7px 16px;border-radius:6px;font-weight:700;cursor:grab;text-decoration:none;display:inline-block}
 .bm-drag:hover{background:#ff7daa}
-.btn-copy{background:var(--accent);color:#08090c;font-size:.7rem;padding:6px 14px;border-radius:6px;font-weight:700;cursor:pointer}
+.btn-copy{background:var(--accent);color:#08090c;font-size:.7rem;padding:6px 14px;border-radius:6px;font-weight:700;cursor:pointer;border:none}
 .btn-copy:hover{background:#7dffbe}
 .btn-copy.ok{background:#2a8a5a;color:#fff}
 .btn-open{background:var(--surface2);color:var(--text);border:1px solid var(--border2);font-size:.7rem;padding:6px 12px;border-radius:6px;cursor:pointer}
@@ -96,7 +96,7 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
 <body>
 <header>
   <div class="logo">img <span class="arr">→</span> <span class="d">desmos table mosaic</span></div>
-  <div class="tag">table + inequality · 2 exprs per color · massive resolution</div>
+  <div class="tag">table + inequality · 2 exprs per color · setState injection</div>
 </header>
 <main>
   <div class="left">
@@ -122,7 +122,7 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
       </div>
       <div class="crow">
         <label>Colors</label>
-        <input type="range" id="sColors" min="2" max="32" value="16">
+        <input type="range" id="sColors" min="2" max="256" value="16">
         <span class="rv" id="vColors">16</span>
       </div>
       <div class="brow">
@@ -138,11 +138,10 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
     </div>
     <div id="outArea">
       <div class="infobox">
-        <strong>Table + Inequality method (inspired by your QR bookmarklet!)</strong><br>
-        Instead of one polygon per pixel, this uses <span class="hl">one table + one inequality per color</span>.<br>
-        Each color gets: a table of <code>(x_N, y_N)</code> pixel positions, plus one expression<br>
-        <code>x_N ≤ x ≤ x_N+1 { y_N-1 ≤ y ≤ y_N }</code> that fills ALL squares at once.<br><br>
-        <strong>Result:</strong> <span class="hl">2 × numColors expressions total</span> instead of thousands of polygons. Loads instantly in Desmos.
+        <strong>Table + Inequality · setState injection</strong><br>
+        One <code>table</code> + one <code>inequality</code> per color = <span class="hl">2 × numColors</span> total expressions.<br>
+        Uses <code>Calc.setState()</code> so fill/color properties apply correctly — no blank renders.<br><br>
+        Upload an image and click <span class="hl">⚡ Generate</span>.
       </div>
       <div class="result-panel" id="resultPanel"></div>
     </div>
@@ -208,7 +207,6 @@ const setP=(n,l)=>{pbar.style.width=n+'%';if(l)plbl.textContent=l;ppct.textConte
 const showP=()=>prog.classList.add('on');
 const hideP=()=>prog.classList.remove('on');
 
-// ── Sample ────────────────────────────────────────────────────────────────────
 function sampleImage(res){
   const ctx=wc.getContext('2d',{willReadFrequently:true});
   const a=imgEl.naturalWidth/imgEl.naturalHeight;
@@ -220,7 +218,6 @@ function sampleImage(res){
   return{data:ctx.getImageData(0,0,W,H).data,W,H};
 }
 
-// ── k-means++ ─────────────────────────────────────────────────────────────────
 function kmeans(data,W,H,k){
   const pts=[];
   for(let i=0;i<W*H;i++){const o=i*4;if(data[o+3]>=80)pts.push([data[o],data[o+1],data[o+2]]);}
@@ -269,85 +266,87 @@ function previewQ(map,W,H,C){
   qCanvas.style.display='block';
 }
 
-// ── Build Desmos setExpressions array ─────────────────────────────────────────
-// The key insight from your QR bookmarklet:
-//   - table with x_N, y_N columns = all pixel positions for one color
-//   - one inequality expression referencing x_N and y_N fills ALL squares:
-//       x_N <= x <= x_N + 1 { y_N - 1 <= y <= y_N }
-//   - This is evaluated for EVERY row in the table simultaneously by Desmos
-//   - Result: 2 expressions per color total!
-function buildExpressionsArray(map,W,H,C){
-  const exprs=[];
-
-  // Pixel coords: just use raw pixel integers (0..W, 0..H)
-  // Then set Desmos viewport to match.
-  // y is flipped: pixel row 0 = top, so Desmos y = -row
+// ── Build Desmos state ────────────────────────────────────────────────────────
+// KEY FIX: use setState (not setExpressions) so that fill/color/lineOpacity
+// properties on inequality expressions are respected by Desmos.
+//
+// Per color we emit:
+//   1) type:'table' with x_N and y_N columns (pixel positions)
+//   2) type:'expression' with the inequality latex + fill:true + color
+//
+// The inequality  x_N <= x <= x_N+1 { y_N-1 <= y <= y_N }
+// is evaluated list-wise by Desmos — one filled square per table row.
+function buildState(map,W,H,C){
+  const list=[];
+  let id=1;
 
   for(let ci=0;ci<C.length;ci++){
     const[r,g,b]=C[ci];
     const color=`#${[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('')}`;
-    const suffix=`_${ci+1}`;
-
-    // Collect all pixel positions for this color
     const xs=[],ys=[];
     for(let py=0;py<H;py++){
       for(let px=0;px<W;px++){
         if(map[py*W+px]===ci){
-          xs.push(px);
-          ys.push(-py); // flip y so image is right-side up
+          xs.push(String(px));
+          ys.push(String(-py));
         }
       }
     }
     if(!xs.length)continue;
 
-    // Table expression: defines x_N and y_N as lists of pixel positions
-    exprs.push({
-      id:`tbl${ci}`,
+    const xVar=`x_{${ci+1}}`;
+    const yVar=`y_{${ci+1}}`;
+
+    // Table
+    list.push({
       type:'table',
+      id:String(id++),
       columns:[
-        {latex:`x${suffix}`, values: xs.map(String), color, hidden:false},
-        {latex:`y${suffix}`, values: ys.map(String), color, hidden:false}
+        {latex:xVar, values:xs, color, hidden:false, points:false, lines:false},
+        {latex:yVar, values:ys, color, hidden:false, points:false, lines:false}
       ]
     });
 
-    // Inequality expression: fills a 1×1 square at every (x_N, y_N)
-    // x_N <= x <= x_N + 1  AND  y_N - 1 <= y <= y_N
-    // Desmos evaluates this list-wise, one square per table row
-    exprs.push({
-      id:`fill${ci}`,
+    // Inequality — fill a 1×1 square at every (x_N, y_N)
+    list.push({
       type:'expression',
-      latex:`x${suffix}\\le x\\le x${suffix}+1\\left\\{y${suffix}-1\\le y\\le y${suffix}\\right\\}`,
+      id:String(id++),
+      latex:`${xVar}\\le x\\le ${xVar}+1\\left\\{${yVar}-1\\le y\\le ${yVar}\\right\\}`,
       color,
       fill:true,
       fillOpacity:'1',
-      lineOpacity:'0'
+      lineOpacity:'0',
+      lineWidth:'0'
     });
   }
-  return exprs;
+
+  const viewport={
+    xmin: -(W*0.02),
+    ymin: -(H*1.02),
+    xmax:   W*1.02,
+    ymax:   H*0.02
+  };
+
+  return{
+    version:9,
+    graph:{viewport},
+    expressions:{list}
+  };
 }
 
-// ── Build bookmarklet ─────────────────────────────────────────────────────────
-function buildBookmarklet(exprs,W,H){
-  const ar=W/H;
-  const vpHalf=Math.ceil(Math.max(W,H)*0.55);
-  const viewport={xmin:-(W*0.05),ymin:-(H*1.05),xmax:W*1.05,ymax:H*0.05};
+function buildBookmarklet(state){
   const code=`(function(){
     if(!window.Calc){alert('Open desmos.com/calculator first!');return;}
-    var exprs=${JSON.stringify(exprs)};
-    Calc.setExpressions(exprs);
-    Calc.setMathBounds(${JSON.stringify(viewport)});
+    Calc.setState(${JSON.stringify(state)});
   })();`;
   return'javascript:'+encodeURIComponent(code);
 }
 
-// ── Render ────────────────────────────────────────────────────────────────────
-function renderResults(exprs,C,W,H,numPixels){
+function renderResults(state,C,W,H,numPixels){
   resultPanel.innerHTML='';resultPanel.classList.add('show');
-  const filled=C.filter((_,i)=>exprs.some(e=>e.id===`tbl${i}`));
-  const numColors=filled.length;
-  const totalExprs=exprs.length;
+  const numColors=C.length;
+  const totalExprs=state.expressions.list.length;
 
-  // Stats
   const statsDiv=document.createElement('div');
   statsDiv.className='stats';
   [
@@ -360,14 +359,12 @@ function renderResults(exprs,C,W,H,numPixels){
   });
   resultPanel.appendChild(statsDiv);
 
-  // Color swatches
-  const swatchWrap=document.createElement('div');
-  swatchWrap.style.cssText='background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:8px';
-  const swatchLabel=document.createElement('div');
-  swatchLabel.style.cssText='font-size:.65rem;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em';
-  swatchLabel.textContent=`${numColors} quantized colors`;
-  const swatchRow=document.createElement('div');
-  swatchRow.className='color-preview';
+  // Swatches
+  const sw=document.createElement('div');
+  sw.style.cssText='background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:8px';
+  sw.innerHTML=`<div style="font-size:.65rem;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em">${numColors} quantized colors</div><div class="color-preview" id="swatchRow"></div>`;
+  resultPanel.appendChild(sw);
+  const swatchRow=sw.querySelector('#swatchRow');
   C.forEach(([r,g,b])=>{
     const s=document.createElement('div');
     s.className='color-swatch';
@@ -375,12 +372,9 @@ function renderResults(exprs,C,W,H,numPixels){
     s.title=`rgb(${r},${g},${b})`;
     swatchRow.appendChild(s);
   });
-  swatchWrap.appendChild(swatchLabel);
-  swatchWrap.appendChild(swatchRow);
-  resultPanel.appendChild(swatchWrap);
 
   // Bookmarklet
-  const bm=buildBookmarklet(exprs,W,H);
+  const bm=buildBookmarklet(state);
   const m1=document.createElement('div');m1.className='method';
   m1.innerHTML=`
     <div class="method-head">
@@ -390,26 +384,26 @@ function renderResults(exprs,C,W,H,numPixels){
       <div class="steps">
         <div class="step"><div class="step-num">1</div><div class="step-txt">Drag <strong>Load in Desmos ↓</strong> to your bookmarks bar</div></div>
         <div class="step"><div class="step-num">2</div><div class="step-txt">Go to <strong>desmos.com/calculator</strong></div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-txt">Click the bookmark — done!</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-txt">Click the bookmark — image loads with solid fills!</div></div>
       </div>
-      <div>
+      <div style="margin-top:4px">
         <a id="bmLink" href="${bm}" class="bm-drag">🖼️ Load in Desmos ↓</a>
         <span style="font-size:.63rem;color:var(--muted);margin-left:10px">← drag to bookmarks bar</span>
       </div>
     </div>`;
   resultPanel.appendChild(m1);
 
-  // Console method
-  const consoleCode=`Calc.setExpressions(${JSON.stringify(exprs)});Calc.setMathBounds(${JSON.stringify({xmin:-(W*0.05),ymin:-(H*1.05),xmax:W*1.05,ymax:H*0.05})});`;
+  // Console
+  const consoleCode=`Calc.setState(${JSON.stringify(state)})`;
   const m2=document.createElement('div');m2.className='method';
   m2.innerHTML=`
     <div class="method-head">
       <div class="method-title">📋 Console <span class="badge badge-alt">F12 method</span></div>
     </div>
     <div class="method-body">
-      <div>Open Desmos → <strong style="color:var(--text)">F12</strong> → Console → paste:</div>
+      <div>Open Desmos → <strong style="color:var(--text)">F12</strong> → Console tab → paste:</div>
       <div style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px 10px;font-family:var(--mono);font-size:.63rem;color:#88aacc;word-break:break-all;max-height:52px;overflow:hidden">
-        Calc.setExpressions([...${exprs.length} exprs...]);
+        Calc.setState({version:9, expressions:{list:[/* ${totalExprs} exprs */]}})
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn-copy" id="copyConsole">Copy console code</button>
@@ -429,7 +423,6 @@ function renderResults(exprs,C,W,H,numPixels){
   $('bmLink').addEventListener('click',e=>{e.preventDefault();showToast('Drag the button to your bookmarks bar!');});
 }
 
-// ── Generate ───────────────────────────────────────────────────────────────────
 genBtn.addEventListener('click',async()=>{
   if(!imgEl)return;
   genBtn.disabled=true;showP();
@@ -446,12 +439,12 @@ genBtn.addEventListener('click',async()=>{
     const map=assign(data,W,H,C);
     setP(65,'Building preview…');await tick(10);
     previewQ(map,W,H,C);
-    setP(75,'Building table expressions…');await tick(10);
-    const exprs=buildExpressionsArray(map,W,H,C);
+    setP(75,'Building Desmos state…');await tick(10);
+    const state=buildState(map,W,H,C);
     const numPixels=map.filter(v=>v!==255).length;
     setP(95,'Rendering output…');await tick(10);
-    renderResults(exprs,C,W,H,numPixels);
-    setP(100,`Done — ${exprs.length} expressions for ${numPixels.toLocaleString()} pixels`);
+    renderResults(state,C,W,H,numPixels);
+    setP(100,`Done — ${state.expressions.list.length} exprs, ${numPixels.toLocaleString()} pixels`);
     await tick(400);
   }finally{
     hideP();genBtn.disabled=false;
