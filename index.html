@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image → Desmos Table</title>
+<title>Image → Desmos Optimized</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Syne+Mono&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -16,7 +16,7 @@
 }
 body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;display:grid;grid-template-rows:auto 1fr}
 header{padding:18px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
-.logo{font-size:1.1rem;font-weight:800;display:flex;align-items:center;gap:10px}
+.logo{font-size:1.1rem;font-weight:800;display:flex;align-items:center;gap:8px}
 .logo .arr{color:var(--accent)}.logo .d{color:var(--accent3)}
 .tag{font-size:.72rem;color:var(--muted);font-family:var(--mono)}
 main{display:grid;grid-template-columns:380px 1fr;height:calc(100vh - 67px);overflow:hidden}
@@ -47,20 +47,20 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
 .bprim:disabled{background:var(--border2);color:var(--muted);cursor:not-allowed;transform:none}
 .bsec{background:var(--surface2);color:var(--text);border:1px solid var(--border2);font-size:.75rem;padding:8px 12px}
 .bsec:hover{border-color:var(--muted)}
-.oh{padding:11px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
+.oh{padding:11px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
 .ot{font-size:.67rem;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;display:flex;align-items:center;gap:8px}
 #outArea{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
 #outArea::-webkit-scrollbar{width:4px}
 #outArea::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 .infobox{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;font-size:.73rem;line-height:1.8;color:var(--muted)}
 .infobox strong{color:var(--accent3)}.hl{color:var(--accent);font-weight:700}
-.infobox code{font-family:var(--mono);font-size:.68rem;background:var(--bg);padding:1px 5px;border-radius:3px;color:#aac}
 .result-panel{display:none;flex-direction:column;gap:12px}
 .result-panel.show{display:flex}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .stat{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;text-align:center}
-.stat-val{font-size:1.1rem;font-weight:800;color:var(--accent);font-family:var(--mono)}
+.stat-val{font-size:1.05rem;font-weight:800;color:var(--accent);font-family:var(--mono)}
 .stat-lbl{font-size:.6rem;color:var(--muted);margin-top:2px;font-family:var(--mono)}
+.stat-sub{font-size:.58rem;color:var(--accent3);font-family:var(--mono);margin-top:1px}
 .method{background:var(--surface);border:1px solid var(--border2);border-radius:10px;overflow:hidden}
 .method-head{padding:10px 14px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
 .method-title{font-size:.78rem;font-weight:700;display:flex;align-items:center;gap:8px;flex:1}
@@ -78,14 +78,14 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
 .btn-copy{background:var(--accent);color:#08090c;font-size:.7rem;padding:6px 14px;border-radius:6px;font-weight:700;cursor:pointer;border:none}
 .btn-copy:hover{background:#7dffbe}
 .btn-copy.ok{background:#2a8a5a;color:#fff}
-.btn-open{background:var(--surface2);color:var(--text);border:1px solid var(--border2);font-size:.7rem;padding:6px 12px;border-radius:6px;cursor:pointer}
+.btn-open{background:var(--surface2);color:var(--text);border:1px solid var(--border2);font-size:.7rem;padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--sans);font-weight:700}
 .btn-open:hover{border-color:var(--accent3);color:var(--accent3)}
 .color-preview{display:flex;flex-wrap:wrap;gap:4px;padding:4px 0}
-.color-swatch{width:18px;height:18px;border-radius:3px;border:1px solid rgba(255,255,255,.1)}
+.cswatch{width:18px;height:18px;border-radius:3px;border:1px solid rgba(255,255,255,.1)}
 .prog{display:none;position:fixed;inset:0;background:rgba(8,9,12,.9);z-index:100;align-items:center;justify-content:center}
 .prog.on{display:flex}
 .pbox{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:26px 42px;display:flex;flex-direction:column;align-items:center;gap:12px;min-width:280px}
-.plbl{font-size:.78rem;color:var(--muted);font-family:var(--mono)}
+.plbl{font-size:.78rem;color:var(--muted);font-family:var(--mono);text-align:center}
 .ptrack{width:100%;height:4px;background:var(--border2);border-radius:2px;overflow:hidden}
 .pbar{height:100%;background:var(--accent);border-radius:2px;transition:width .12s;box-shadow:0 0 10px var(--accent)}
 .ppct{font-size:.7rem;color:var(--accent);font-family:var(--mono)}
@@ -95,8 +95,8 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
 </head>
 <body>
 <header>
-  <div class="logo">img <span class="arr">→</span> <span class="d">desmos table mosaic</span></div>
-  <div class="tag">table + inequality · 2 exprs per color · setState injection</div>
+  <div class="logo">img <span class="arr">→</span> <span class="d">desmos optimized</span></div>
+  <div class="tag">rect merging · fewest polygons · full quality</div>
 </header>
 <main>
   <div class="left">
@@ -138,10 +138,8 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
     </div>
     <div id="outArea">
       <div class="infobox">
-        <strong>Table + Inequality · setState injection</strong><br>
-        One <code>table</code> + one <code>inequality</code> per color = <span class="hl">2 × numColors</span> total expressions.<br>
-        Uses <code>Calc.setState()</code> so fill/color properties apply correctly — no blank renders.<br><br>
-        Upload an image and click <span class="hl">⚡ Generate</span>.
+        <strong>Rectangle merging — fewest polygons, full quality</strong><br>
+        Same pixel-perfect color as before, but adjacent same-color rows get merged into tall rectangles. A 100×100 image that used to need ~8,000 polygons might only need ~400. No quality loss — just smarter packing.
       </div>
       <div class="result-panel" id="resultPanel"></div>
     </div>
@@ -165,7 +163,7 @@ const fileInput=$('fileInput'),prevImg=$('prevImg'),qCanvas=$('qCanvas');
 const ctrls=$('ctrls'),genBtn=$('genBtn'),resetBtn=$('resetBtn');
 const outArea=$('outArea'),resultPanel=$('resultPanel');
 const wc=$('wc'),prog=$('prog'),pbar=$('pbar'),plbl=$('plbl'),ppct=$('ppct');
-const toast=$('toast'),sGrid=$('sGrid'),sColors=$('sColors');
+const toast=$('toast');
 let imgEl=null;
 
 [['sGrid','vGrid'],['sColors','vColors']].forEach(([s,v])=>{
@@ -207,6 +205,7 @@ const setP=(n,l)=>{pbar.style.width=n+'%';if(l)plbl.textContent=l;ppct.textConte
 const showP=()=>prog.classList.add('on');
 const hideP=()=>prog.classList.remove('on');
 
+// ── Sample ────────────────────────────────────────────────────────────────────
 function sampleImage(res){
   const ctx=wc.getContext('2d',{willReadFrequently:true});
   const a=imgEl.naturalWidth/imgEl.naturalHeight;
@@ -218,6 +217,7 @@ function sampleImage(res){
   return{data:ctx.getImageData(0,0,W,H).data,W,H};
 }
 
+// ── k-means++ ─────────────────────────────────────────────────────────────────
 function kmeans(data,W,H,k){
   const pts=[];
   for(let i=0;i<W*H;i++){const o=i*4;if(data[o+3]>=80)pts.push([data[o],data[o+1],data[o+2]]);}
@@ -266,71 +266,90 @@ function previewQ(map,W,H,C){
   qCanvas.style.display='block';
 }
 
+// ── Rectangle merging (the key optimization) ──────────────────────────────────
+// For each color:
+//   1. Scan each row, find horizontal runs (x1, x2)
+//   2. For each run, check if the SAME run (same x1, x2) existed in the row above
+//      and is still "open" (not yet finalized). If yes, extend it downward.
+//      If no, finalize the old rect and start a new one.
+// This is the "Maximal Rectangle via row-sweep" approach — O(W*H) per color.
+// Result: large uniform areas become single tall rectangles, not many thin strips.
+function mergeRects(map,W,H,colorIdx){
+  // active: Map from "x1,x2" string → { x1, x2, yTop } for currently-open rects
+  let active=new Map();
+  const rects=[];
+
+  for(let y=0;y<=H;y++){
+    // Build runs for this row (or empty set if y==H to flush all)
+    const runs=new Map(); // key "x1,x2" → {x1,x2}
+    if(y<H){
+      let rs=-1;
+      for(let x=0;x<=W;x++){
+        const isC=(x<W)&&map[y*W+x]===colorIdx;
+        if(isC&&rs===-1){rs=x;}
+        else if(!isC&&rs!==-1){
+          const key=`${rs},${x}`;
+          runs.set(key,{x1:rs,x2:x});
+          rs=-1;
+        }
+      }
+    }
+
+    // Close any active rects that don't continue in this row
+    for(const [key,rect] of active){
+      if(!runs.has(key)){
+        rects.push({x1:rect.x1,x2:rect.x2,y1:rect.yTop,y2:y});
+        active.delete(key);
+      }
+    }
+    // Open new rects for runs not already active
+    for(const [key,run] of runs){
+      if(!active.has(key)){
+        active.set(key,{x1:run.x1,x2:run.x2,yTop:y});
+      }
+    }
+  }
+  return rects;
+}
+
 // ── Build Desmos state ────────────────────────────────────────────────────────
-// KEY FIX: use setState (not setExpressions) so that fill/color/lineOpacity
-// properties on inequality expressions are respected by Desmos.
-//
-// Per color we emit:
-//   1) type:'table' with x_N and y_N columns (pixel positions)
-//   2) type:'expression' with the inequality latex + fill:true + color
-//
-// The inequality  x_N <= x <= x_N+1 { y_N-1 <= y <= y_N }
-// is evaluated list-wise by Desmos — one filled square per table row.
 function buildState(map,W,H,C){
   const list=[];
   let id=1;
+  let totalRects=0;
 
   for(let ci=0;ci<C.length;ci++){
     const[r,g,b]=C[ci];
     const color=`#${[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('')}`;
-    const xs=[],ys=[];
-    for(let py=0;py<H;py++){
-      for(let px=0;px<W;px++){
-        if(map[py*W+px]===ci){
-          xs.push(String(px));
-          ys.push(String(-py));
-        }
-      }
+    const rects=mergeRects(map,W,H,ci);
+    if(!rects.length)continue;
+    totalRects+=rects.length;
+
+    for(const{x1,x2,y1,y2}of rects){
+      // polygon with 4 corners — solid filled rectangle
+      // coords: pixel x goes right, pixel y goes down so we negate y for Desmos
+      const p=v=>Math.round(v*100)/100;
+      const dx1=p(x1),dx2=p(x2),dy1=p(-y2),dy2=p(-y1);
+      list.push({
+        type:'expression',
+        id:String(id++),
+        latex:`\\operatorname{polygon}\\left(\\left(${dx1},${dy1}\\right),\\left(${dx2},${dy1}\\right),\\left(${dx2},${dy2}\\right),\\left(${dx1},${dy2}\\right)\\right)`,
+        color,
+        fill:true,
+        fillOpacity:'1',
+        lineOpacity:'0',
+        lineWidth:'0'
+      });
     }
-    if(!xs.length)continue;
-
-    const xVar=`x_{${ci+1}}`;
-    const yVar=`y_{${ci+1}}`;
-
-    // Table
-    list.push({
-      type:'table',
-      id:String(id++),
-      columns:[
-        {latex:xVar, values:xs, color, hidden:false, points:false, lines:false},
-        {latex:yVar, values:ys, color, hidden:false, points:false, lines:false}
-      ]
-    });
-
-    // Inequality — fill a 1×1 square at every (x_N, y_N)
-    list.push({
-      type:'expression',
-      id:String(id++),
-      latex:`${xVar}\\le x\\le ${xVar}+1\\left\\{${yVar}-1\\le y\\le ${yVar}\\right\\}`,
-      color,
-      fill:true,
-      fillOpacity:'1',
-      lineOpacity:'0',
-      lineWidth:'0'
-    });
   }
 
-  const viewport={
-    xmin: -(W*0.02),
-    ymin: -(H*1.02),
-    xmax:   W*1.02,
-    ymax:   H*0.02
-  };
-
   return{
-    version:9,
-    graph:{viewport},
-    expressions:{list}
+    state:{
+      version:9,
+      graph:{viewport:{xmin:-(W*0.02),ymin:-(H*1.02),xmax:W*1.02,ymax:H*0.02}},
+      expressions:{list}
+    },
+    totalRects
   };
 }
 
@@ -342,17 +361,17 @@ function buildBookmarklet(state){
   return'javascript:'+encodeURIComponent(code);
 }
 
-function renderResults(state,C,W,H,numPixels){
+function renderResults(state,totalRects,rawRects,C,W,H){
   resultPanel.innerHTML='';resultPanel.classList.add('show');
-  const numColors=C.length;
-  const totalExprs=state.expressions.list.length;
+  const numExprs=state.expressions.list.length;
+  const reduction=rawRects>0?Math.round((1-totalRects/rawRects)*100):0;
 
   const statsDiv=document.createElement('div');
   statsDiv.className='stats';
   [
-    [totalExprs,'Total exprs'],
-    [`${numColors}×2`,'Table+fill pairs'],
-    [numPixels.toLocaleString(),'Pixels'],
+    [numExprs.toLocaleString(),'Polygons'],
+    [rawRects.toLocaleString(),'Before merge'],
+    [reduction+'%','Reduction'],
     [`${W}×${H}`,'Resolution']
   ].forEach(([v,l])=>{
     statsDiv.innerHTML+=`<div class="stat"><div class="stat-val">${v}</div><div class="stat-lbl">${l}</div></div>`;
@@ -362,18 +381,16 @@ function renderResults(state,C,W,H,numPixels){
   // Swatches
   const sw=document.createElement('div');
   sw.style.cssText='background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:8px';
-  sw.innerHTML=`<div style="font-size:.65rem;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em">${numColors} quantized colors</div><div class="color-preview" id="swatchRow"></div>`;
-  resultPanel.appendChild(sw);
-  const swatchRow=sw.querySelector('#swatchRow');
+  const swRow=document.createElement('div');swRow.className='color-preview';
   C.forEach(([r,g,b])=>{
-    const s=document.createElement('div');
-    s.className='color-swatch';
-    s.style.background=`rgb(${r},${g},${b})`;
-    s.title=`rgb(${r},${g},${b})`;
-    swatchRow.appendChild(s);
+    const s=document.createElement('div');s.className='cswatch';
+    s.style.background=`rgb(${r},${g},${b})`;s.title=`rgb(${r},${g},${b})`;
+    swRow.appendChild(s);
   });
+  sw.innerHTML=`<div style="font-size:.65rem;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em">${C.length} colors</div>`;
+  sw.appendChild(swRow);
+  resultPanel.appendChild(sw);
 
-  // Bookmarklet
   const bm=buildBookmarklet(state);
   const m1=document.createElement('div');m1.className='method';
   m1.innerHTML=`
@@ -384,7 +401,7 @@ function renderResults(state,C,W,H,numPixels){
       <div class="steps">
         <div class="step"><div class="step-num">1</div><div class="step-txt">Drag <strong>Load in Desmos ↓</strong> to your bookmarks bar</div></div>
         <div class="step"><div class="step-num">2</div><div class="step-txt">Go to <strong>desmos.com/calculator</strong></div></div>
-        <div class="step"><div class="step-num">3</div><div class="step-txt">Click the bookmark — image loads with solid fills!</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-txt">Click it — image loads instantly!</div></div>
       </div>
       <div style="margin-top:4px">
         <a id="bmLink" href="${bm}" class="bm-drag">🖼️ Load in Desmos ↓</a>
@@ -393,7 +410,6 @@ function renderResults(state,C,W,H,numPixels){
     </div>`;
   resultPanel.appendChild(m1);
 
-  // Console
   const consoleCode=`Calc.setState(${JSON.stringify(state)})`;
   const m2=document.createElement('div');m2.className='method';
   m2.innerHTML=`
@@ -401,9 +417,9 @@ function renderResults(state,C,W,H,numPixels){
       <div class="method-title">📋 Console <span class="badge badge-alt">F12 method</span></div>
     </div>
     <div class="method-body">
-      <div>Open Desmos → <strong style="color:var(--text)">F12</strong> → Console tab → paste:</div>
-      <div style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px 10px;font-family:var(--mono);font-size:.63rem;color:#88aacc;word-break:break-all;max-height:52px;overflow:hidden">
-        Calc.setState({version:9, expressions:{list:[/* ${totalExprs} exprs */]}})
+      <div>Open Desmos → <strong style="color:var(--text)">F12</strong> → Console → paste:</div>
+      <div style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:8px 10px;font-family:var(--mono);font-size:.63rem;color:#88aacc;overflow:hidden;max-height:48px">
+        Calc.setState({version:9, expressions:{list:[/* ${numExprs} polygons */]}})
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn-copy" id="copyConsole">Copy console code</button>
@@ -423,13 +439,14 @@ function renderResults(state,C,W,H,numPixels){
   $('bmLink').addEventListener('click',e=>{e.preventDefault();showToast('Drag the button to your bookmarks bar!');});
 }
 
+// ── Generate ───────────────────────────────────────────────────────────────────
 genBtn.addEventListener('click',async()=>{
   if(!imgEl)return;
   genBtn.disabled=true;showP();
   await tick(30);
   try{
-    const grid=parseInt(sGrid.value);
-    const k=parseInt(sColors.value);
+    const grid=parseInt($('sGrid').value);
+    const k=parseInt($('sColors').value);
     setP(5,'Sampling image…');await tick(10);
     const{data,W,H}=sampleImage(grid);
     setP(18,'Running k-means…');await tick(10);
@@ -437,14 +454,29 @@ genBtn.addEventListener('click',async()=>{
     if(!C.length){hideP();genBtn.disabled=false;return;}
     setP(52,'Assigning pixels…');await tick(10);
     const map=assign(data,W,H,C);
-    setP(65,'Building preview…');await tick(10);
+    setP(65,'Preview…');await tick(10);
     previewQ(map,W,H,C);
-    setP(75,'Building Desmos state…');await tick(10);
-    const state=buildState(map,W,H,C);
-    const numPixels=map.filter(v=>v!==255).length;
-    setP(95,'Rendering output…');await tick(10);
-    renderResults(state,C,W,H,numPixels);
-    setP(100,`Done — ${state.expressions.list.length} exprs, ${numPixels.toLocaleString()} pixels`);
+
+    // Count raw (unmerged) scanline rects for the stats comparison
+    setP(72,'Counting baseline…');await tick(10);
+    let rawRects=0;
+    for(let ci=0;ci<C.length;ci++){
+      for(let y=0;y<H;y++){
+        let rs=-1;
+        for(let x=0;x<=W;x++){
+          const isC=(x<W)&&map[y*W+x]===ci;
+          if(isC&&rs===-1)rs=x;
+          else if(!isC&&rs!==-1){rawRects++;rs=-1;}
+        }
+      }
+    }
+
+    setP(78,'Merging rectangles…');await tick(10);
+    const{state,totalRects}=buildState(map,W,H,C);
+
+    setP(95,'Rendering…');await tick(10);
+    renderResults(state,totalRects,rawRects,C,W,H);
+    setP(100,`Done — ${totalRects.toLocaleString()} polygons (was ${rawRects.toLocaleString()})`);
     await tick(400);
   }finally{
     hideP();genBtn.disabled=false;
