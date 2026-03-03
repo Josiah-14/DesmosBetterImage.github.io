@@ -1,2 +1,2 @@
 # DesmosBetterImage
-A python-style approach to Desmos image rendering
+A mosaic-style approach to Desmos image rendering
