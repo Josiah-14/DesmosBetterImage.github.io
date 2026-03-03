@@ -121,19 +121,19 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
         <input type="range" id="sRes" min="40" max="800" value="120">
         <span class="rv" id="vRes">120</span>
       </div>
-      <div class="hint">↑ more detail + more expressions. 80–200 is sweet spot.</div>
+      <div class="hint">higher = more detail + more expressions. 80-200 is sweet spot.</div>
       <div class="crow">
         <label>Colors</label>
         <input type="range" id="sColors" min="4" max="64" value="24">
         <span class="rv" id="vColors">24</span>
       </div>
-      <div class="hint">median cut palette — more = accurate, fewer = compact.</div>
+      <div class="hint">median cut palette. more = accurate, fewer = compact.</div>
       <div class="crow">
         <label>Dither strength</label>
         <input type="range" id="sDither" min="0" max="100" value="70">
         <span class="rv" id="vDither">70%</span>
       </div>
-      <div class="hint">0 = sharp/pixelated, 100 = smooth blending. 60–80 best.</div>
+      <div class="hint">0 = sharp/pixelated, 100 = smooth blending. 60-80 is best.</div>
       <div class="crow">
         <label>Expr target</label>
         <input type="range" id="sLimit" min="500" max="8000" value="3500">
@@ -141,7 +141,7 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
       </div>
       <div class="hint">soft cap — absorbs tiny noise blobs to stay under limit.</div>
       <div class="brow">
-        <button class="bprim" id="genBtn">⚡ Generate</button>
+        <button class="bprim" id="genBtn">Generate</button>
         <button class="bsec" id="resetBtn">Reset</button>
       </div>
     </div>
@@ -153,13 +153,13 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
     </div>
     <div id="outArea">
       <div class="infobox">
-        <strong>What's new:</strong><br>
-        <span class="hl">Median cut</span> builds a smarter palette by recursively splitting the color space along its widest axis — no wasted slots on near-identical colors.<br>
-        <span class="hl">Floyd-Steinberg dithering</span> spreads color error to neighbors, making flat areas truly uniform → vertical merge collapses them into far fewer tall rectangles.<br>
-        <span class="hl">Tiny blob absorption</span> removes isolated noise pixels that each need their own expression.<br><br>
+        <strong>What's new in this version:</strong><br>
+        <span class="hl">Median cut</span> builds a smarter palette by recursively splitting the color space along its widest axis — no wasted palette slots.<br>
+        <span class="hl">Floyd-Steinberg dithering</span> spreads color error to neighbors so flat areas stay truly uniform, which makes vertical merging collapse way more rows.<br>
+        <span class="hl">Tiny blob absorption</span> removes isolated noise pixels that each cost one expression.<br><br>
         <strong>Loading into Desmos:</strong>
         <ol>
-          <li>Generate → drag <span class="hl">Load in Desmos ↓</span> to bookmarks bar</li>
+          <li>Generate then drag <span class="hl">Load in Desmos</span> button to bookmarks bar</li>
           <li>Open <strong>desmos.com/calculator</strong></li>
           <li>Click the bookmark — loads instantly</li>
           <li>Or: F12 → Console → paste the console code</li>
@@ -172,7 +172,7 @@ button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cur
 
 <div class="prog" id="prog">
   <div class="pbox">
-    <div class="plbl" id="plbl">Processing…</div>
+    <div class="plbl" id="plbl">Processing...</div>
     <div class="ptrack"><div class="pbar" id="pbar" style="width:0%"></div></div>
     <div class="ppct" id="ppct">0%</div>
   </div>
@@ -199,6 +199,7 @@ fileInput.addEventListener('change',e=>load(e.target.files[0]));
 uzone.addEventListener('dragover',e=>{e.preventDefault();uzone.classList.add('drag');});
 uzone.addEventListener('dragleave',()=>uzone.classList.remove('drag'));
 uzone.addEventListener('drop',e=>{e.preventDefault();uzone.classList.remove('drag');const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))load(f);});
+
 function load(file){
   if(!file)return;
   const url=URL.createObjectURL(file);
@@ -211,6 +212,7 @@ function load(file){
   };
   imgEl.src=url;
 }
+
 resetBtn.addEventListener('click',()=>{
   imgEl=null;fileInput.value='';prevImg.src='';uprompt.style.display='';
   prevWrap.style.cssText='display:none';
@@ -224,7 +226,7 @@ const setP=(n,l)=>{pbar.style.width=n+'%';if(l)plbl.textContent=l;ppct.textConte
 const showP=()=>prog.classList.add('on');
 const hideP=()=>prog.classList.remove('on');
 
-// ── 1. Sample image ───────────────────────────────────────────────────────────
+// 1. Sample image as Float32 buffer
 function sampleImage(res){
   const ctx=wc.getContext('2d',{willReadFrequently:true});
   const asp=imgEl.naturalWidth/imgEl.naturalHeight;
@@ -239,13 +241,17 @@ function sampleImage(res){
   return{rgb,W,H};
 }
 
-// ── 2. Median cut quantization ────────────────────────────────────────────────
+// 2. Median cut quantization
 function medianCut(rgb,W,H,k){
   const pts=[];
   for(let i=0;i<W*H;i++)pts.push([rgb[i*3],rgb[i*3+1],rgb[i*3+2]]);
   function split(b){
     let r0=255,r1=0,g0=255,g1=0,b0=255,b1=0;
-    for(const[r,g,b]of b){if(r<r0)r0=r;if(r>r1)r1=r;if(g<g0)g0=g;if(g>g1)g1=g;if(b<b0)b0=b;if(b>b1)b1=b;}
+    for(const[r,g,bv]of b){
+      if(r<r0)r0=r;if(r>r1)r1=r;
+      if(g<g0)g0=g;if(g>g1)g1=g;
+      if(bv<b0)b0=bv;if(bv>b1)b1=bv;
+    }
     const ch=(r1-r0)>=(g1-g0)&&(r1-r0)>=(b1-b0)?0:(g1-g0)>=(b1-b0)?1:2;
     b.sort((a,c)=>a[ch]-c[ch]);
     const m=b.length>>1;
@@ -268,35 +274,40 @@ function medianCut(rgb,W,H,k){
   return buckets.map(avg);
 }
 
-// ── 3. Floyd-Steinberg dithering ──────────────────────────────────────────────
+// 3. Floyd-Steinberg dithering
 function floydSteinberg(rgb,W,H,pal,strength){
   const buf=new Float32Array(rgb);
   const map=new Uint8Array(W*H);
   function nearest(r,g,b){
     let bd=Infinity,bi=0;
-    for(let i=0;i<pal.length;i++){const d=(r-pal[i][0])**2+(g-pal[i][1])**2+(b-pal[i][2])**2;if(d<bd){bd=d;bi=i;}}
+    for(let i=0;i<pal.length;i++){
+      const d=(r-pal[i][0])**2+(g-pal[i][1])**2+(b-pal[i][2])**2;
+      if(d<bd){bd=d;bi=i;}
+    }
     return bi;
   }
-  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
-    const i=y*W+x;
-    const ci=nearest(buf[i*3],buf[i*3+1],buf[i*3+2]);
-    map[i]=ci;
-    const er=(buf[i*3  ]-pal[ci][0])*strength;
-    const eg=(buf[i*3+1]-pal[ci][1])*strength;
-    const eb=(buf[i*3+2]-pal[ci][2])*strength;
-    function add(nx,ny,f){
-      if(nx<0||nx>=W||ny<0||ny>=H)return;
-      const n=(ny*W+nx)*3;
-      buf[n  ]=Math.max(0,Math.min(255,buf[n  ]+er*f));
-      buf[n+1]=Math.max(0,Math.min(255,buf[n+1]+eg*f));
-      buf[n+2]=Math.max(0,Math.min(255,buf[n+2]+eb*f));
+  for(let y=0;y<H;y++){
+    for(let x=0;x<W;x++){
+      const i=y*W+x;
+      const ci=nearest(buf[i*3],buf[i*3+1],buf[i*3+2]);
+      map[i]=ci;
+      const er=(buf[i*3  ]-pal[ci][0])*strength;
+      const eg=(buf[i*3+1]-pal[ci][1])*strength;
+      const eb=(buf[i*3+2]-pal[ci][2])*strength;
+      function add(nx,ny,f){
+        if(nx<0||nx>=W||ny<0||ny>=H)return;
+        const n=(ny*W+nx)*3;
+        buf[n  ]=Math.max(0,Math.min(255,buf[n  ]+er*f));
+        buf[n+1]=Math.max(0,Math.min(255,buf[n+1]+eg*f));
+        buf[n+2]=Math.max(0,Math.min(255,buf[n+2]+eb*f));
+      }
+      add(x+1,y,7/16);add(x-1,y+1,3/16);add(x,y+1,5/16);add(x+1,y+1,1/16);
     }
-    add(x+1,y,7/16);add(x-1,y+1,3/16);add(x,y+1,5/16);add(x+1,y+1,1/16);
   }
   return map;
 }
 
-// ── 4. Preview ────────────────────────────────────────────────────────────────
+// 4. Preview
 function previewQ(map,W,H,pal){
   qCanvas.width=W;qCanvas.height=H;
   const ctx=qCanvas.getContext('2d');
@@ -309,7 +320,7 @@ function previewQ(map,W,H,pal){
   qCanvas.style.display='block';
 }
 
-// ── 5. BFS blob labeling ──────────────────────────────────────────────────────
+// 5. BFS blob labeling
 function labelBlobs(map,W,H){
   const labels=new Int32Array(W*H).fill(-1);
   const blobs=[];
@@ -318,25 +329,31 @@ function labelBlobs(map,W,H){
     if(labels[s]!==-1)continue;
     const ci=map[s];
     let h=0,t=0,mnX=W,mxX=0,mnY=H,mxY=0,sz=0;
-    q[t++]=s;labels[s]=blobs.length;
+    const lbl=blobs.length;
+    q[t++]=s;labels[s]=lbl;
     while(h<t){
       const i=q[h++];const x=i%W,y=(i/W)|0;
-      if(x<mnX)mnX=x;if(x>mxX)mxX=x;if(y<mnY)mnY=y;if(y>mxY)mxY=y;sz++;
-      if(x>0   &&labels[i-1]===-1&&map[i-1]===ci){labels[i-1]=blobs.length;q[t++]=i-1;}
-      if(x<W-1 &&labels[i+1]===-1&&map[i+1]===ci){labels[i+1]=blobs.length;q[t++]=i+1;}
-      if(y>0   &&labels[i-W]===-1&&map[i-W]===ci){labels[i-W]=blobs.length;q[t++]=i-W;}
-      if(y<H-1 &&labels[i+W]===-1&&map[i+W]===ci){labels[i+W]=blobs.length;q[t++]=i+W;}
+      if(x<mnX)mnX=x;if(x>mxX)mxX=x;
+      if(y<mnY)mnY=y;if(y>mxY)mxY=y;
+      sz++;
+      if(x>0   &&labels[i-1]===-1&&map[i-1]===ci){labels[i-1]=lbl;q[t++]=i-1;}
+      if(x<W-1 &&labels[i+1]===-1&&map[i+1]===ci){labels[i+1]=lbl;q[t++]=i+1;}
+      if(y>0   &&labels[i-W]===-1&&map[i-W]===ci){labels[i-W]=lbl;q[t++]=i-W;}
+      if(y<H-1 &&labels[i+W]===-1&&map[i+W]===ci){labels[i+W]=lbl;q[t++]=i+W;}
     }
-    blobs.push({ci,mnX,mxX,mnY,mxY,sz,lbl:blobs.length});
+    blobs.push({ci,mnX,mxX,mnY,mxY,sz,lbl});
   }
   return{labels,blobs};
 }
 
-// ── 6. Absorb tiny blobs ──────────────────────────────────────────────────────
+// 6. Absorb tiny blobs into neighbors
 function absorbTiny(map,W,H,labels,blobs,limit){
   function estExprs(m){
     let c=0;
-    for(let y=0;y<H;y++){let last=-1;for(let x=0;x<W;x++){const v=m[y*W+x];if(v!==last){c++;last=v;}}}
+    for(let y=0;y<H;y++){
+      let last=-1;
+      for(let x=0;x<W;x++){const v=m[y*W+x];if(v!==last){c++;last=v;}}
+    }
     return Math.ceil(c*0.55);
   }
   const wm=new Uint8Array(map);
@@ -346,143 +363,188 @@ function absorbTiny(map,W,H,labels,blobs,limit){
     if(estExprs(wm)<=limit)break;
     if(blob.sz>6)break;
     const votes=new Map();
-    for(let y=blob.mnY;y<=blob.mxY&&y<H;y++)for(let x=blob.mnX;x<=blob.mxX&&x<W;x++){
-      const i=y*W+x;if(wl[i]!==blob.lbl)continue;
-      const ns=[];if(x>0)ns.push(i-1);if(x<W-1)ns.push(i+1);if(y>0)ns.push(i-W);if(y<H-1)ns.push(i+W);
-      for(const n of ns){const nc=wm[n];if(nc!==blob.ci)votes.set(nc,(votes.get(nc)||0)+1);}
+    for(let y=blob.mnY;y<=blob.mxY&&y<H;y++){
+      for(let x=blob.mnX;x<=blob.mxX&&x<W;x++){
+        const i=y*W+x;
+        if(wl[i]!==blob.lbl)continue;
+        const ns=[];
+        if(x>0)ns.push(i-1);if(x<W-1)ns.push(i+1);
+        if(y>0)ns.push(i-W);if(y<H-1)ns.push(i+W);
+        for(const n of ns){const nc=wm[n];if(nc!==blob.ci)votes.set(nc,(votes.get(nc)||0)+1);}
+      }
     }
     if(!votes.size)continue;
-    let bc=blob.ci,bv=0;for(const[c,v]of votes)if(v>bv){bv=v;bc=c;}
-    for(let y=blob.mnY;y<=blob.mxY&&y<H;y++)for(let x=blob.mnX;x<=blob.mxX&&x<W;x++){
-      const i=y*W+x;if(wl[i]===blob.lbl)wm[i]=bc;
+    let bc=blob.ci,bv=0;
+    for(const[c,v]of votes)if(v>bv){bv=v;bc=c;}
+    for(let y=blob.mnY;y<=blob.mxY&&y<H;y++){
+      for(let x=blob.mnX;x<=blob.mxX&&x<W;x++){
+        const i=y*W+x;if(wl[i]===blob.lbl)wm[i]=bc;
+      }
     }
   }
   return wm;
 }
 
-// ── 7. Build Desmos state (vertical-merge scanlines) ──────────────────────────
+// 7. Build Desmos state with vertical-merge scanlines
 function buildDesmosState(map,W,H,pal,half){
   const ar=W/H,hw=half*ar,hh=half;
-  const pw=(hw*2)/W,ph=(hh*2)/H;
-  const sx=x=>-hw+x*pw, sy=y=>hh-y*ph;
+  const pw=(hw*2)/W;
+  const sx=x=>-hw+x*pw;
+  const sy=y=> hh-y*(hh*2)/H;
   const f=v=>Math.round(v*1000)/1000;
-  const exprs=[];let id=1;
+  const exprs=[];
+  let id=1;
 
   function emit(x1,x2,yT,yB,color){
     const a=f(sx(x1)),b=f(sx(x2)),c=f(sy(yB)),d=f(sy(yT));
     exprs.push({
-      type:'expression',id:String(id++),color,fillOpacity:'1',lineOpacity:'0',lineWidth:'0',
-      latex:`\\operatorname{polygon}\\left(\\left(${a},${c}\\right),\\left(${b},${c}\\right),\\left(${b},${d}\\right),\\left(${a},${d}\\right)\\right)`
+      type:'expression',id:String(id++),color,
+      fillOpacity:'1',lineOpacity:'0',lineWidth:'0',
+      latex:'\\operatorname{polygon}\\left(\\left('+a+','+c+'\\right),\\left('+b+','+c+'\\right),\\left('+b+','+d+'\\right),\\left('+a+','+d+'\\right)\\right)'
     });
   }
 
   for(let ci=0;ci<pal.length;ci++){
     const[r,g,b]=pal[ci];
-    const color=`#${[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('')}`;
+    const color='#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
     const prev=new Map();
     for(let y=0;y<=H;y++){
       const cur=new Map();
-      if(y<H){let rs=-1;for(let x=0;x<=W;x++){const isC=(x<W)&&map[y*W+x]===ci;if(isC&&rs===-1)rs=x;else if(!isC&&rs!==-1){cur.set(rs+','+x,true);rs=-1;}}}
-      for(const[k,sy2]of prev)if(!cur.has(k)){const[xs,xe]=k.split(',').map(Number);emit(xs,xe,sy2,y,color);prev.delete(k);}
+      if(y<H){
+        let rs=-1;
+        for(let x=0;x<=W;x++){
+          const isC=(x<W)&&map[y*W+x]===ci;
+          if(isC&&rs===-1){rs=x;}
+          else if(!isC&&rs!==-1){cur.set(rs+','+x,true);rs=-1;}
+        }
+      }
+      for(const[k,sy2]of prev){
+        if(!cur.has(k)){
+          const parts=k.split(',');
+          emit(+parts[0],+parts[1],sy2,y,color);
+          prev.delete(k);
+        }
+      }
       for(const k of cur.keys())if(!prev.has(k))prev.set(k,y);
     }
   }
-  return{version:9,graph:{viewport:{xmin:-hw*1.05,ymin:-hh*1.05,xmax:hw*1.05,ymax:hh*1.05}},expressions:{list:exprs}};
+  return{
+    version:9,
+    graph:{viewport:{xmin:-hw*1.05,ymin:-hh*1.05,xmax:hw*1.05,ymax:hh*1.05}},
+    expressions:{list:exprs}
+  };
 }
 
-// ── 8. Bookmarklet ────────────────────────────────────────────────────────────
+// 8. Bookmarklet
 function buildBookmarklet(state){
   const n=state.expressions.list.length;
   const s=JSON.stringify(state);
   return'javascript:'+encodeURIComponent(
-    `(function(){if(!window.Desmos||!window.Calc){alert('Open on desmos.com/calculator first!');return;}try{Calc.setState(${s});console.log('Loaded ${n} exprs');}catch(e){alert(e.message);}})();`
+    '(function(){if(!window.Desmos||!window.Calc){alert("Open on desmos.com/calculator first!");return;}try{Calc.setState('+s+');console.log("Loaded '+n+' expressions");}catch(e){alert(e.message);}})();'
   );
 }
 
-// ── Render results ────────────────────────────────────────────────────────────
+// Render results
 function renderResults(state,bm,W,H,nCol){
-  resultPanel.innerHTML='';resultPanel.classList.add('show');
+  resultPanel.innerHTML='';
+  resultPanel.classList.add('show');
   const n=state.expressions.list.length,ok=n<=4000;
-  const stats=document.createElement('div');stats.className='stats';
-  [[n,ok?'✓ expressions':'⚠ expressions',!ok],[nCol,'colors'],[W+'×'+H,'resolution'],[ok?'🟢 fast':'🟡 may lag','desmos']].forEach(([v,l,w])=>{
-    stats.innerHTML+=`<div class="stat"><div class="stat-val"${w?' style="color:var(--accent2)"':''}>${v}</div><div class="stat-lbl">${l}</div></div>`;
+
+  const stats=document.createElement('div');
+  stats.className='stats';
+  [[n,ok?'expressions':'expressions',!ok],[nCol,'colors'],[W+'x'+H,'resolution'],[ok?'fast':'may lag','desmos']].forEach(([v,l,w])=>{
+    stats.innerHTML+='<div class="stat"><div class="stat-val"'+(w?' style="color:var(--accent2)"':'')+'>'+v+'</div><div class="stat-lbl">'+l+'</div></div>';
   });
   resultPanel.appendChild(stats);
-  if(!ok){const w=document.createElement('div');w.className='warn';w.textContent=`⚠ ${n} expressions — try lower resolution, fewer colors, or higher dither strength.`;resultPanel.appendChild(w);}
 
+  if(!ok){
+    const w=document.createElement('div');w.className='warn';
+    w.textContent='Warning: '+n+' expressions may be slow in Desmos. Try lowering resolution, fewer colors, or higher dither strength.';
+    resultPanel.appendChild(w);
+  }
+
+  // Bookmarklet method
   const m1=document.createElement('div');m1.className='method';
-  m1.innerHTML=`<div class="method-head"><div class="method-title">🚀 Bookmarklet <span class="badge badge-best">RECOMMENDED</span></div></div>
-  <div class="method-body">
-    <div class="steps">
-      <div class="step"><div class="step-num">1</div><div class="step-txt">Drag <strong>Load in Desmos ↓</strong> to your bookmarks bar</div></div>
-      <div class="step"><div class="step-num">2</div><div class="step-txt">Open <strong>desmos.com/calculator</strong></div></div>
-      <div class="step"><div class="step-num">3</div><div class="step-txt">Click the bookmark → image loads instantly</div></div>
-    </div>
-    <div class="bm-actions"><a id="bmLink" href="${bm}" class="bm-drag">🖼️ Load in Desmos ↓</a><span style="font-size:.65rem;color:var(--muted)">← drag to bookmarks bar</span></div>
-  </div>`;
+  m1.innerHTML='<div class="method-head"><div class="method-title">Bookmarklet <span class="badge badge-best">RECOMMENDED</span></div></div>'
+    +'<div class="method-body">'
+    +'<div class="steps">'
+    +'<div class="step"><div class="step-num">1</div><div class="step-txt">Drag <strong>Load in Desmos</strong> to your bookmarks bar</div></div>'
+    +'<div class="step"><div class="step-num">2</div><div class="step-txt">Open <strong>desmos.com/calculator</strong></div></div>'
+    +'<div class="step"><div class="step-num">3</div><div class="step-txt">Click the bookmark — image loads instantly, no paste needed</div></div>'
+    +'</div>'
+    +'<div class="bm-actions"><a id="bmLink" href="'+bm+'" class="bm-drag">Load in Desmos (drag me)</a><span style="font-size:.65rem;color:var(--muted)">&larr; drag to bookmarks bar</span></div>'
+    +'</div>';
   resultPanel.appendChild(m1);
 
-  const consoleCode=`Calc.setState(${JSON.stringify(state)})`;
+  // Console method
+  const consoleCode='Calc.setState('+JSON.stringify(state)+')';
   const m2=document.createElement('div');m2.className='method';
-  m2.innerHTML=`<div class="method-head"><div class="method-title">🔧 Browser Console <span class="badge badge-alt">F12 method</span></div></div>
-  <div class="method-body">
-    <div>Open Desmos → <strong style="color:var(--text)">F12</strong> → Console → paste:</div>
-    <div class="bm-actions"><button class="btn-copy" id="copyConsole">Copy console code</button><button class="btn-open" id="openDesmos">Open Desmos ↗</button></div>
-  </div>`;
+  m2.innerHTML='<div class="method-head"><div class="method-title">Browser Console <span class="badge badge-alt">F12 method</span></div></div>'
+    +'<div class="method-body">'
+    +'<div>Open Desmos, press <strong style="color:var(--text)">F12</strong>, go to Console tab, then paste:</div>'
+    +'<div class="bm-actions"><button class="btn-copy" id="copyConsole">Copy console code</button><button class="btn-open" id="openDesmos">Open Desmos</button></div>'
+    +'</div>';
   resultPanel.appendChild(m2);
 
   $('copyConsole').addEventListener('click',()=>{
     navigator.clipboard.writeText(consoleCode).then(()=>{
-      $('copyConsole').textContent='✓ Copied!';$('copyConsole').classList.add('ok');
+      $('copyConsole').textContent='Copied!';$('copyConsole').classList.add('ok');
       setTimeout(()=>{$('copyConsole').textContent='Copy console code';$('copyConsole').classList.remove('ok');},2000);
-      showToast('Copied! Go to Desmos → F12 → Console → Ctrl+V → Enter');
+      showToast('Copied! Go to Desmos, press F12, go to Console, paste and hit Enter');
     });
   });
   $('openDesmos').addEventListener('click',()=>window.open('https://www.desmos.com/calculator','_blank'));
-  $('bmLink').addEventListener('click',e=>{e.preventDefault();showToast('Drag the pink button to your bookmarks bar first!');});
+  $('bmLink').addEventListener('click',e=>{e.preventDefault();showToast('Drag the pink button to your bookmarks bar, then click it on desmos.com/calculator');});
 }
 
-function showToast(m){toast.textContent=m;toast.classList.add('on');setTimeout(()=>toast.classList.remove('on'),4500);}
+function showToast(m){
+  toast.textContent=m;toast.classList.add('on');
+  setTimeout(()=>toast.classList.remove('on'),4500);
+}
 
-// ── Main pipeline ─────────────────────────────────────────────────────────────
+// Main pipeline
 genBtn.addEventListener('click',async()=>{
   if(!imgEl)return;
-  genBtn.disabled=true;showP();await tick(30);
+  genBtn.disabled=true;showP();
+  await tick(30);
   try{
     const res=parseInt($('sRes').value);
     const nColors=parseInt($('sColors').value);
     const dither=parseInt($('sDither').value)/100;
     const limit=parseInt($('sLimit').value);
 
-    setP(5,'Sampling image…');await tick(10);
+    setP(5,'Sampling image...');await tick(10);
     const{rgb,W,H}=sampleImage(res);
 
-    setP(15,'Median cut palette…');await tick(10);
+    setP(15,'Median cut palette...');await tick(10);
     const pal=medianCut(rgb,W,H,nColors);
 
-    setP(32,'Floyd-Steinberg dithering…');await tick(10);
+    setP(32,'Floyd-Steinberg dithering...');await tick(10);
     let map=floydSteinberg(rgb,W,H,pal,dither);
 
-    setP(55,'Preview…');await tick(10);
+    setP(55,'Building preview...');await tick(10);
     previewQ(map,W,H,pal);
 
-    setP(63,'Labeling blobs…');await tick(10);
+    setP(63,'Labeling blobs...');await tick(10);
     const{labels,blobs}=labelBlobs(map,W,H);
 
-    setP(72,`${blobs.length} blobs — absorbing tiny ones…`);await tick(10);
+    setP(72,'Absorbing '+blobs.length+' blobs...');await tick(10);
     map=absorbTiny(map,W,H,labels,blobs,limit);
 
-    setP(82,'Building polygons…');await tick(10);
+    setP(82,'Building polygons (vertical merge)...');await tick(10);
     const state=buildDesmosState(map,W,H,pal,10);
     const n=state.expressions.list.length;
 
-    setP(94,'Building bookmarklet…');await tick(10);
+    setP(94,'Building bookmarklet...');await tick(10);
     const bm=buildBookmarklet(state);
 
-    setP(99,'Rendering…');await tick(10);
+    setP(99,'Rendering output...');await tick(10);
     renderResults(state,bm,W,H,pal.length);
-    setP(100,`Done — ${n} expressions`);await tick(400);
-  }finally{hideP();genBtn.disabled=false;}
+    setP(100,'Done - '+n+' expressions');
+    await tick(400);
+  }finally{
+    hideP();genBtn.disabled=false;
+  }
 });
 </script>
 </body>
