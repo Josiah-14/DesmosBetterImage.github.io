@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image → Desmos</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08090c;--surface:#0f1117;--surface2:#161820;
+  --border:#1e2130;--border2:#2a2f45;
+  --accent:#5dffb0;--accent2:#ff5d8f;--accent3:#5d9fff;
+  --text:#dde3f0;--muted:#6b7394;
+  --mono:'Syne Mono',monospace;--sans:'Syne',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;display:grid;grid-template-rows:auto 1fr}
+header{padding:16px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.logo{font-size:1.05rem;font-weight:800;display:flex;align-items:center;gap:8px}
+.logo .arr{color:var(--accent)}.logo .d{color:var(--accent3)}
+.tag{font-size:.68rem;color:var(--muted);font-family:var(--mono)}
+main{display:grid;grid-template-columns:400px 1fr;height:calc(100vh - 61px);overflow:hidden}
+.left{border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.right{display:flex;flex-direction:column;overflow:hidden}
+.ph{padding:11px 16px;border-bottom:1px solid var(--border);font-size:.63rem;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;display:flex;align-items:center;gap:8px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--accent)}
+
+/* Upload zone */
+.uzone{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px dashed var(--border2);margin:14px;border-radius:12px;transition:.2s;overflow:hidden;position:relative;min-height:0}
+.uzone:hover{border-color:var(--accent);background:rgba(93,255,176,.03)}
+.uzone.drag{border-color:var(--accent);background:rgba(93,255,176,.08)}
+.utext{text-align:center;font-size:.8rem;color:var(--muted);line-height:1.8}
+.utext strong{color:var(--accent)}
+#fileInput{display:none}
+#prevWrap{display:none;flex-direction:column;width:100%;height:100%}
+.prevTop{flex:1;display:flex;align-items:center;justify-content:center;background:#000;position:relative;overflow:hidden;min-height:0}
+#prevImg{max-width:100%;max-height:100%;object-fit:contain;opacity:.85}
+#qCanvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none;pointer-events:none}
+
+/* Controls */
+.ctrls{padding:12px 14px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;flex-shrink:0}
+.section-label{font-size:.6rem;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:-4px}
+.crow{display:flex;align-items:center;gap:10px}
+.crow label{font-size:.65rem;font-family:var(--mono);color:var(--muted);min-width:90px}
+.rv{font-family:var(--mono);font-size:.65rem;color:var(--accent);min-width:28px;text-align:right}
+
+/* Lag meter slider track */
+.slider-wrap{flex:1;display:flex;flex-direction:column;gap:4px}
+.lag-track{position:relative;height:6px;border-radius:3px;overflow:hidden;background:linear-gradient(to right,
+  #22c55e 0%, #22c55e 18.75%,
+  #eab308 18.75%, #eab308 62.5%,
+  #ef4444 62.5%, #ef4444 100%)}
+.lag-thumb{position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 0 4px rgba(0,0,0,.6);pointer-events:none;transition:left .05s}
+.lag-labels{display:flex;justify-content:space-between;font-size:.55rem;font-family:var(--mono);color:var(--muted)}
+.lag-label-green{color:#22c55e}.lag-label-yellow{color:#eab308}.lag-label-red{color:#ef4444}
+.lag-zone{font-size:.62rem;font-family:var(--mono);font-weight:700;text-align:right;min-width:80px}
+.zone-green{color:#22c55e}.zone-yellow{color:#eab308}.zone-red{color:#ef4444}
+input[type=range].lag-input{-webkit-appearance:none;appearance:none;width:100%;height:6px;background:transparent;outline:none;position:absolute;top:0;left:0;margin:0;cursor:pointer}
+input[type=range].lag-input::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff;cursor:pointer;box-shadow:0 0 4px rgba(0,0,0,.6)}
+input[type=range].lag-input::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#fff;cursor:pointer;border:none;box-shadow:0 0 4px rgba(0,0,0,.6)}
+
+/* Colors slider (normal) */
+input[type=range].norm{-webkit-appearance:none;appearance:none;flex:1;height:3px;background:var(--border2);border-radius:2px;outline:none}
+input[type=range].norm::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 6px rgba(93,255,176,.5)}
+
+/* Center grid */
+.center-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;max-width:120px}
+.center-btn{background:var(--surface2);border:1px solid var(--border2);border-radius:5px;padding:7px;font-size:.7rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s;aspect-ratio:1}
+.center-btn:hover{border-color:var(--accent3);background:rgba(93,159,255,.08)}
+.center-btn.active{border-color:var(--accent);background:rgba(93,255,176,.12);color:var(--accent)}
+.center-label{font-size:.63rem;font-family:var(--mono);color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.center-val{color:var(--accent3);font-size:.68rem}
+
+/* Offset inputs */
+.offset-row{display:flex;align-items:center;gap:8px}
+.offset-input{background:var(--surface2);border:1px solid var(--border2);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:.65rem;padding:4px 8px;width:70px;outline:none;text-align:center}
+.offset-input:focus{border-color:var(--accent3)}
+
+.divider{height:1px;background:var(--border);margin:2px 0}
+.brow{display:flex;gap:7px;margin-top:2px}
+button{font-family:var(--sans);font-weight:700;border:none;border-radius:7px;cursor:pointer;transition:.15s}
+.bprim{background:var(--accent);color:#08090c;font-size:.73rem;padding:8px 14px;flex:1}
+.bprim:hover{background:#7dffbe;transform:translateY(-1px)}
+.bprim:disabled{background:var(--border2);color:var(--muted);cursor:not-allowed;transform:none}
+.bsec{background:var(--surface2);color:var(--text);border:1px solid var(--border2);font-size:.73rem;padding:8px 11px}
+.bsec:hover{border-color:var(--muted)}
+
+/* Right panel */
+.oh{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.ot{font-size:.63rem;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.12em;display:flex;align-items:center;gap:8px}
+#outArea{flex:1;overflow-y:auto;padding:13px;display:flex;flex-direction:column;gap:10px}
+#outArea::-webkit-scrollbar{width:4px}
+#outArea::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.infobox{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:13px 15px;font-size:.72rem;line-height:1.8;color:var(--muted)}
+.infobox strong{color:var(--accent3)}.hl{color:var(--accent);font-weight:700}
+.result-panel{display:none;flex-direction:column;gap:11px}
+.result-panel.show{display:flex}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.stat{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 10px;text-align:center}
+.stat-val{font-size:1rem;font-weight:800;color:var(--accent);font-family:var(--mono)}
+.stat-lbl{font-size:.58rem;color:var(--muted);margin-top:2px;font-family:var(--mono)}
+
+/* Methods */
+.method{background:var(--surface);border:1px solid var(--border2);border-radius:10px;overflow:hidden}
+.method-head{padding:9px 13px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.method-title{font-size:.76rem;font-weight:700;display:flex;align-items:center;gap:8px;flex:1}
+.badge{font-size:.58rem;padding:2px 7px;border-radius:20px;font-family:var(--mono)}
+.badge-best{background:rgba(93,255,176,.15);color:var(--accent);border:1px solid rgba(93,255,176,.3)}
+.badge-alt{background:rgba(93,159,255,.15);color:var(--accent3);border:1px solid rgba(93,159,255,.3)}
+.method-body{padding:11px 13px;font-size:.72rem;color:var(--muted);line-height:1.7;display:flex;flex-direction:column;gap:9px}
+.steps{display:flex;flex-direction:column;gap:5px}
+.step{display:flex;gap:9px;align-items:flex-start}
+.step-num{width:18px;height:18px;border-radius:50%;background:var(--accent);color:#08090c;font-size:.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-txt{font-size:.72rem;color:var(--muted);line-height:1.6}
+.step-txt strong{color:var(--text)}
+.bm-drag{background:var(--accent2);color:#fff;font-size:.68rem;padding:6px 14px;border-radius:6px;font-weight:700;cursor:grab;text-decoration:none;display:inline-block}
+.bm-drag:hover{background:#ff7daa}
+.btn-copy{background:var(--accent);color:#08090c;font-size:.68rem;padding:5px 13px;border-radius:6px;font-weight:700;cursor:pointer;border:none}
+.btn-copy:hover{background:#7dffbe}
+.btn-copy.ok{background:#2a8a5a;color:#fff}
+.btn-open{background:var(--surface2);color:var(--text);border:1px solid var(--border2);font-size:.68rem;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:var(--sans);font-weight:700}
+.btn-open:hover{border-color:var(--accent3);color:var(--accent3)}
+.color-preview{display:flex;flex-wrap:wrap;gap:3px;padding:3px 0}
+.cswatch{width:16px;height:16px;border-radius:3px;border:1px solid rgba(255,255,255,.08)}
+
+/* Progress */
+.prog{display:none;position:fixed;inset:0;background:rgba(8,9,12,.9);z-index:100;align-items:center;justify-content:center}
+.prog.on{display:flex}
+.pbox{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:26px 42px;display:flex;flex-direction:column;align-items:center;gap:12px;min-width:280px}
+.plbl{font-size:.76rem;color:var(--muted);font-family:var(--mono);text-align:center}
+.ptrack{width:100%;height:4px;background:var(--border2);border-radius:2px;overflow:hidden}
+.pbar{height:100%;background:var(--accent);border-radius:2px;transition:width .12s;box-shadow:0 0 10px var(--accent)}
+.ppct{font-size:.68rem;color:var(--accent);font-family:var(--mono)}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--accent);color:#08090c;font-weight:700;font-size:.72rem;padding:8px 15px;border-radius:8px;z-index:200;opacity:0;transform:translateY(6px);transition:.2s;pointer-events:none}
+.toast.on{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">img <span class="arr">→</span> <span class="d">desmos</span></div>
+  <div class="tag">rect merging · polygon fills · setState injection</div>
+</header>
+<main>
+  <div class="left">
+    <div class="ph"><div class="dot"></div>input image</div>
+    <div class="uzone" id="uzone">
+      <div id="uprompt">
+        <div style="font-size:2rem;opacity:.3;margin-bottom:8px">🖼️</div>
+        <div class="utext"><strong>Drop image here</strong> or click<br>PNG · JPG · WebP</div>
+      </div>
+      <div id="prevWrap">
+        <div class="prevTop">
+          <img id="prevImg" alt=""/>
+          <canvas id="qCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+    <input type="file" id="fileInput" accept="image/*">
+
+    <div class="ctrls" id="ctrls" style="display:none">
+
+      <!-- Grid size with lag meter -->
+      <div class="section-label">resolution</div>
+      <div class="crow">
+        <label>Grid size</label>
+        <div class="slider-wrap">
+          <div style="position:relative;height:6px">
+            <div class="lag-track"></div>
+            <input type="range" class="lag-input" id="sGrid" min="20" max="200" value="80">
+            <div class="lag-thumb" id="lagThumb"></div>
+          </div>
+          <div class="lag-labels">
+            <span class="lag-label-green">smooth</span>
+            <span class="lag-label-yellow">moderate</span>
+            <span class="lag-label-red">heavy</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
+          <span class="rv" id="vGrid">80</span>
+          <span class="lag-zone zone-green" id="lagZone">● smooth</span>
+        </div>
+      </div>
+
+      <!-- Colors -->
+      <div class="section-label">colors</div>
+      <div class="crow">
+        <label>Color count</label>
+        <input type="range" class="norm" id="sColors" min="2" max="256" value="32">
+        <span class="rv" id="vColors">32</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Centering -->
+      <div class="section-label">center image at</div>
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div class="center-grid" id="centerGrid">
+          <div class="center-btn" data-pos="tl">↖</div>
+          <div class="center-btn" data-pos="tc">↑</div>
+          <div class="center-btn" data-pos="tr">↗</div>
+          <div class="center-btn" data-pos="ml">←</div>
+          <div class="center-btn active" data-pos="mc">⊙</div>
+          <div class="center-btn" data-pos="mr">→</div>
+          <div class="center-btn" data-pos="bl">↙</div>
+          <div class="center-btn" data-pos="bc">↓</div>
+          <div class="center-btn" data-pos="br">↘</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;flex:1">
+          <div class="center-label">
+            <span>Anchor point</span>
+            <span class="center-val" id="anchorLabel">Center (0, 0)</span>
+          </div>
+          <div class="offset-row">
+            <span style="font-size:.62rem;font-family:var(--mono);color:var(--muted)">X offset</span>
+            <input type="number" class="offset-input" id="offX" value="0" placeholder="0">
+          </div>
+          <div class="offset-row">
+            <span style="font-size:.62rem;font-family:var(--mono);color:var(--muted)">Y offset</span>
+            <input type="number" class="offset-input" id="offY" value="0" placeholder="0">
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="brow">
+        <button class="bprim" id="genBtn">⚡ Generate</button>
+        <button class="bsec" id="resetBtn">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="oh">
+      <div class="ot"><div class="dot" style="background:var(--accent3)"></div>output</div>
+    </div>
+    <div id="outArea">
+      <div class="infobox">
+        <strong>Polygon mosaic with rect merging</strong><br>
+        Adjacent same-color rows merge into tall rectangles — far fewer polygons, same pixel-perfect quality. Use the <span class="hl">lag meter</span> to gauge Desmos performance before generating. The <span class="hl">centering grid</span> controls where the image is anchored in Desmos coordinates.
+      </div>
+      <div class="result-panel" id="resultPanel"></div>
+    </div>
+  </div>
+</main>
+
+<div class="prog" id="prog">
+  <div class="pbox">
+    <div class="plbl" id="plbl">Processing…</div>
+    <div class="ptrack"><div class="pbar" id="pbar" style="width:0%"></div></div>
+    <div class="ppct" id="ppct">0%</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<canvas id="wc" style="display:none"></canvas>
+
+<script>
+const $=id=>document.getElementById(id);
+const uzone=$('uzone'),uprompt=$('uprompt'),prevWrap=$('prevWrap');
+const fileInput=$('fileInput'),prevImg=$('prevImg'),qCanvas=$('qCanvas');
+const ctrls=$('ctrls'),genBtn=$('genBtn'),resetBtn=$('resetBtn');
+const outArea=$('outArea'),resultPanel=$('resultPanel');
+const wc=$('wc'),prog=$('prog'),pbar=$('pbar'),plbl=$('plbl'),ppct=$('ppct');
+const toast=$('toast');
+let imgEl=null;
+let anchorPos='mc';
+let currentState = null;
+
+// ── Toast notifications ─────────────────────────────────────────────────────
+function showToast(message) {
+  toast.textContent = message;
+  toast.classList.add('on');
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => {
+    toast.classList.remove('on');
+  }, 3000);
+}
+
+// ── Fixed Upload Handlers ────────────────────────────────────────────────────
+
+function loadImage(file) {
+  if (!file) {
+    showToast('No file selected');
+    return;
+  }
+  
+  // Check if it's actually an image
+  if (!file.type.startsWith('image/')) {
+    showToast('Please select an image file');
+    return;
+  }
+  
+  // Method 1: Using FileReader (most compatible)
+  const reader = new FileReader();
+  
+  reader.onload = function(e) {
+    try {
+      const dataUrl = e.target.result;
+      
+      // Create image object
+      imgEl = new Image();
+      
+      imgEl.onload = function() {
+        // Success - display the image
+        prevImg.src = dataUrl;
+        uprompt.style.display = 'none';
+        prevWrap.style.display = 'flex';
+        prevWrap.style.flexDirection = 'column';
+        prevWrap.style.width = '100%';
+        prevWrap.style.height = '100%';
+        
+        // Update UI
+        uzone.style.cursor = 'default';
+        uzone.style.border = 'none';
+        uzone.style.margin = '0';
+        uzone.style.borderRadius = '0';
+        ctrls.style.display = 'flex';
+        genBtn.disabled = false;
+        
+        showToast('Image loaded successfully!');
+      };
+      
+      imgEl.onerror = function() {
+        showToast('Failed to load image. The file might be corrupted.');
+        imgEl = null;
+      };
+      
+      // Start loading the image
+      imgEl.src = dataUrl;
+      
+    } catch (err) {
+      showToast('Error loading image: ' + err.message);
+    }
+  };
+  
+  reader.onerror = function() {
+    showToast('Failed to read file');
+  };
+  
+  // Start reading the file
+  reader.readAsDataURL(file);
+}
+
+// Click to upload
+uzone.addEventListener('click', function(e) {
+  // Don't trigger if clicking on the preview
+  if (e.target.closest('#prevWrap')) return;
+  if (!imgEl) {
+    fileInput.click();
+  }
+});
+
+// File input change
+fileInput.addEventListener('change', function(e) {
+  if (this.files && this.files[0]) {
+    loadImage(this.files[0]);
+  }
+  // Reset so the same file can be selected again
+  this.value = '';
+});
+
+// Drag and drop
+uzone.addEventListener('dragover', function(e) {
+  e.preventDefault();
+  this.classList.add('drag');
+});
+
+uzone.addEventListener('dragleave', function(e) {
+  e.preventDefault();
+  this.classList.remove('drag');
+});
+
+uzone.addEventListener('drop', function(e) {
+  e.preventDefault();
+  this.classList.remove('drag');
+  
+  const files = e.dataTransfer.files;
+  if (files && files.length > 0) {
+    const file = files[0];
+    if (file.type.startsWith('image/')) {
+      loadImage(file);
+    } else {
+      showToast('Please drop an image file');
+    }
+  }
+});
+
+// ── Reset ────────────────────────────────────────────────────────────────────
+resetBtn.addEventListener('click', function() {
+  imgEl = null;
+  fileInput.value = '';
+  prevImg.src = '';
+  qCanvas.width = 0;
+  qCanvas.height = 0;
+  qCanvas.style.display = 'none';
+  
+  // Reset UI
+  uprompt.style.display = '';
+  prevWrap.style.display = 'none';
+  prevWrap.style.cssText = 'display:none';
+  
+  uzone.style.cursor = '';
+  uzone.style.border = '';
+  uzone.style.margin = '';
+  uzone.style.borderRadius = '';
+  
+  ctrls.style.display = 'none';
+  resultPanel.innerHTML = '';
+  resultPanel.classList.remove('show');
+  currentState = null;
+  genBtn.disabled = true;
+  
+  showToast('Reset complete');
+});
+
+// ── Lag meter ─────────────────────────────────────────────────────────────────
+function updateLagMeter(){
+  const v=parseInt($('sGrid').value);
+  const max=200,min=20;
+  const pct=(v-min)/(max-min)*100;
+  $('lagThumb').style.left=pct+'%';
+  $('vGrid').textContent=v;
+  let zone,cls;
+  if(v<=60){zone='● smooth';cls='zone-green';}
+  else if(v<=120){zone='● moderate';cls='zone-yellow';}
+  else{zone='● heavy lag';cls='zone-red';}
+  const el=$('lagZone');
+  el.textContent=zone;
+  el.className='lag-zone '+cls;
+}
+$('sGrid').addEventListener('input',updateLagMeter);
+updateLagMeter();
+
+$('sColors').addEventListener('input',()=>$('vColors').textContent=$('sColors').value);
+
+// ── Centering grid ────────────────────────────────────────────────────────────
+const anchorLabels={
+  tl:'Top-left (corner)',tc:'Top-center',tr:'Top-right (corner)',
+  ml:'Mid-left',mc:'Center (0, 0)',mr:'Mid-right',
+  bl:'Bottom-left (corner)',bc:'Bottom-center',br:'Bottom-right (corner)'
+};
+document.querySelectorAll('.center-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.center-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    anchorPos=btn.dataset.pos;
+    $('anchorLabel').textContent=anchorLabels[anchorPos];
+  });
+});
+
+function getOffset(W,H){
+  const userX=parseFloat($('offX').value)||0;
+  const userY=parseFloat($('offY').value)||0;
+  const ax={'l':0,'c':0.5,'r':1}[anchorPos[1]];
+  const ay={'t':0,'m':0.5,'b':1}[anchorPos[0]];
+  const ox = -ax * W + userX;
+  const oy =  ay * H - userY;
+  return{ox,oy};
+}
+
+const tick=ms=>new Promise(r=>setTimeout(r,ms));
+const setP=(n,l)=>{pbar.style.width=n+'%';if(l)plbl.textContent=l;ppct.textContent=Math.round(n)+'%';};
+const showP=()=>prog.classList.add('on');
+const hideP=()=>prog.classList.remove('on');
+
+// ── Sample image ──────────────────────────────────────────────────────────────
+function sampleImage(res){
+  const ctx=wc.getContext('2d',{willReadFrequently:true});
+  const a=imgEl.naturalWidth/imgEl.naturalHeight;
+  let W,H;
+  if(a>=1){W=res;H=Math.max(1,Math.round(res/a));}
+  else{H=res;W=Math.max(1,Math.round(res*a));}
+  wc.width=W;wc.height=H;
+  ctx.drawImage(imgEl,0,0,W,H);
+  return{data:ctx.getImageData(0,0,W,H).data,W,H};
+}
+
+// ── k-means++ ─────────────────────────────────────────────────────────────────
+function kmeans(data,W,H,k){
+  const pts=[];
+  for(let i=0;i<W*H;i++){const o=i*4;if(data[o+3]>=80)pts.push([data[o],data[o+1],data[o+2]]);}
+  if(!pts.length)return[];
+  const C=[pts[Math.floor(Math.random()*pts.length)]];
+  while(C.length<k){
+    const D=pts.map(p=>{let m=Infinity;for(const c of C){const d=(p[0]-c[0])**2+(p[1]-c[1])**2+(p[2]-c[2])**2;if(d<m)m=d;}return m;});
+    const s=D.reduce((a,b)=>a+b,0);let r=Math.random()*s,cum=0;
+    for(let i=0;i<pts.length;i++){cum+=D[i];if(cum>=r){C.push(pts[i]);break;}}
+    if(C.length<k)C.push(pts[C.length%pts.length]);
+  }
+  for(let it=0;it<12;it++){
+    const S=Array.from({length:k},()=>({r:0,g:0,b:0,n:0}));
+    for(const p of pts){
+      let bd=Infinity,bc=0;
+      for(let c=0;c<k;c++){const d=(p[0]-C[c][0])**2+(p[1]-C[c][1])**2+(p[2]-C[c][2])**2;if(d<bd){bd=d;bc=c;}}
+      S[bc].r+=p[0];S[bc].g+=p[1];S[bc].b+=p[2];S[bc].n++;
+    }
+    for(let c=0;c<k;c++)if(S[c].n>0)C[c]=[Math.round(S[c].r/S[c].n),Math.round(S[c].g/S[c].n),Math.round(S[c].b/S[c].n)];
+  }
+  return C;
+}
+
+function assign(data,W,H,C){
+  const map=new Uint8Array(W*H).fill(255);
+  for(let i=0;i<W*H;i++){
+    const o=i*4;if(data[o+3]<80)continue;
+    const r=data[o],g=data[o+1],b=data[o+2];
+    let bd=Infinity,bc=0;
+    for(let c=0;c<C.length;c++){const d=(r-C[c][0])**2+(g-C[c][1])**2+(b-C[c][2])**2;if(d<bd){bd=d;bc=c;}}
+    map[i]=bc;
+  }
+  return map;
+}
+
+function previewQ(map,W,H,C){
+  qCanvas.width=W;qCanvas.height=H;
+  const ctx=qCanvas.getContext('2d');
+  const id=ctx.createImageData(W,H);
+  for(let i=0;i<W*H;i++){
+    const o=i*4,c=map[i];
+    if(c===255){id.data[o+3]=0;continue;}
+    [id.data[o],id.data[o+1],id.data[o+2],id.data[o+3]]=[C[c][0],C[c][1],C[c][2],255];
+  }
+  ctx.putImageData(id,0,0);
+  qCanvas.style.display='block';
+}
+
+// ── Rectangle merging ─────────────────────────────────────────────────────────
+function mergeRects(map,W,H,colorIdx){
+  let active=new Map();
+  const rects=[];
+  for(let y=0;y<=H;y++){
+    const runs=new Map();
+    if(y<H){
+      let rs=-1;
+      for(let x=0;x<=W;x++){
+        const isC=(x<W)&&map[y*W+x]===colorIdx;
+        if(isC&&rs===-1){rs=x;}
+        else if(!isC&&rs!==-1){runs.set(`${rs},${x}`,{x1:rs,x2:x});rs=-1;}
+      }
+    }
+    for(const[key,rect]of active){
+      if(!runs.has(key)){rects.push({x1:rect.x1,x2:rect.x2,y1:rect.yTop,y2:y});active.delete(key);}
+    }
+    for(const[key,run]of runs){
+      if(!active.has(key)){active.set(key,{x1:run.x1,x2:run.x2,yTop:y});}
+    }
+  }
+  return rects;
+}
+
+// ── Build Desmos state ────────────────────────────────────────────────────────
+function buildState(map,W,H,C,ox,oy){
+  const list=[];
+  let id=1,totalRects=0;
+
+  for(let ci=0;ci<C.length;ci++){
+    const[r,g,b]=C[ci];
+    const color=`#${[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('')}`;
+    const rects=mergeRects(map,W,H,ci);
+    if(!rects.length)continue;
+    totalRects+=rects.length;
+
+    for(const{x1,x2,y1,y2}of rects){
+      const dx1=x1+ox, dx2=x2+ox;
+      const dy1=-(y2)+oy, dy2=-(y1)+oy;
+      const p=v=>Math.round(v*10)/10;
+      list.push({
+        type:'expression',
+        id:String(id++),
+        latex:`\\operatorname{polygon}\\left(\\left(${p(dx1)},${p(dy1)}\\right),\\left(${p(dx2)},${p(dy1)}\\right),\\left(${p(dx2)},${p(dy2)}\\right),\\left(${p(dx1)},${p(dy2)}\\right)\\right)`,
+        color,
+        fill:true,
+        fillOpacity:'1',
+        lineOpacity:'0',
+        lineWidth:'0'
+      });
+    }
+  }
+
+  const margin=Math.max(W,H)*0.05;
+  const vp={
+    xmin: ox - margin,
+    xmax: ox + W + margin,
+    ymin: oy - H - margin,
+    ymax: oy + margin
+  };
+
+  return{
+    version:9,
+    graph:{viewport:vp},
+    expressions:{list}
+  };
+}
+
+// ── Bookmarklet builder ───────────────────────────────────────────────────────
+function buildBookmarklet(state){
+  const stateJson=JSON.stringify(state);
+  const script = `(function(){if(!window.Calc){alert('Please open desmos.com/calculator first!');return;}try{Calc.setState(${stateJson});}catch(e){alert('Error: '+e.message);}})();`;
+  return 'javascript:' + encodeURIComponent(script);
+}
+
+// ── Render results ────────────────────────────────────────────────────────────
+function renderResults(state,totalRects,rawRects,C,W,H){
+  resultPanel.innerHTML='';resultPanel.classList.add('show');
+  const numExprs=state.expressions.list.length;
+  const reduction=rawRects>0?Math.round((1-totalRects/rawRects)*100):0;
+
+  // Stats
+  const statsDiv=document.createElement('div');statsDiv.className='stats';
+  [
+    [numExprs.toLocaleString(),'Polygons'],
+    [rawRects.toLocaleString(),'Unmerged'],
+    [reduction+'%','Saved'],
+    [`${W}×${H}`,'Resolution']
+  ].forEach(([v,l])=>{
+    statsDiv.innerHTML+=`<div class="stat"><div class="stat-val">${v}</div><div class="stat-lbl">${l}</div></div>`;
+  });
+  resultPanel.appendChild(statsDiv);
+
+  // Color swatches
+  const sw=document.createElement('div');
+  sw.style.cssText='background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 13px;display:flex;flex-direction:column;gap:6px';
+  const swRow=document.createElement('div');swRow.className='color-preview';
+  C.forEach(([r,g,b])=>{
+    const s=document.createElement('div');s.className='cswatch';
+    s.style.background=`rgb(${r},${g},${b})`;s.title=`rgb(${r},${g},${b})`;
+    swRow.appendChild(s);
+  });
+  sw.innerHTML=`<div style="font-size:.62rem;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em">${C.length} colors</div>`;
+  sw.appendChild(swRow);
+  resultPanel.appendChild(sw);
+
+  // Bookmarklet method
+  const bm=buildBookmarklet(state);
+  const m1=document.createElement('div');m1.className='method';
+  m1.innerHTML=`
+    <div class="method-head">
+      <div class="method-title">🚀 Bookmarklet <span class="badge badge-best">recommended</span></div>
+    </div>
+    <div class="method-body">
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-txt">Drag <strong>Load in Desmos ↓</strong> to your bookmarks bar</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-txt">Open <strong>desmos.com/calculator</strong> in a tab</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-txt">Click the bookmark — image loads instantly with solid fills!</div></div>
+      </div>
+      <div style="margin-top:2px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <a id="bmLink" href="${bm}" class="bm-drag">🖼️ Load in Desmos ↓</a>
+        <span style="font-size:.6rem;color:var(--muted)">← drag this to bookmarks bar</span>
+      </div>
+    </div>`;
+  resultPanel.appendChild(m1);
+  m1.querySelector('#bmLink').addEventListener('click',function(e){
+    e.preventDefault();
+    showToast('Drag the button to your bookmarks bar, then click it on desmos.com!');
+  });
+
+  // Console method
+  const consoleCode=`Calc.setState(${JSON.stringify(state)})`;
+  const m2=document.createElement('div');m2.className='method';
+  m2.innerHTML=`
+    <div class="method-head">
+      <div class="method-title">📋 Console inject <span class="badge badge-alt">F12 method</span></div>
+    </div>
+    <div class="method-body">
+      <div>Go to <strong style="color:var(--text)">desmos.com/calculator</strong>, open the console with <strong style="color:var(--text)">F12</strong>, paste:</div>
+      <div style="background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:7px 10px;font-family:var(--mono);font-size:.6rem;color:#88aacc;overflow:hidden;max-height:44px;line-height:1.4">
+        Calc.setState({version:9, expressions:{list:[/* ${numExprs} polygons */]}, graph:{...}})
+      </div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn-copy" id="copyConsole">Copy full code</button>
+        <button class="btn-open" id="openDesmos">Open Desmos ↗</button>
+      </div>
+    </div>`;
+  resultPanel.appendChild(m2);
+
+  document.getElementById('copyConsole').addEventListener('click',function(){
+    navigator.clipboard.writeText(consoleCode).then(()=>{
+      this.textContent='✓ Copied!';this.classList.add('ok');
+      setTimeout(()=>{this.textContent='Copy full code';this.classList.remove('ok');},2000);
+      showToast('Copied! Paste in Desmos console.');
+    }).catch(()=>{
+      // Fallback
+      const textarea = document.createElement('textarea');
+      textarea.value = consoleCode;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      showToast('Copied! Paste in Desmos console.');
+    });
+  });
+  document.getElementById('openDesmos').addEventListener('click',()=>window.open('https://www.desmos.com/calculator','_blank'));
+}
+
+// ── Generate ──────────────────────────────────────────────────────────────────
+genBtn.addEventListener('click',async function(){
+  if(!imgEl){
+    showToast('Please load an image first!');
+    return;
+  }
+  
+  this.disabled = true;
+  showP();
+  await tick(30);
+  
+  try{
+    const grid=parseInt($('sGrid').value);
+    const k=parseInt($('sColors').value);
+
+    setP(5,'Sampling image…');await tick(10);
+    const{data,W,H}=sampleImage(grid);
+
+    setP(18,'Running k-means…');await tick(10);
+    const C=kmeans(data,W,H,k);
+    if(!C.length){hideP();this.disabled=false;showToast('No pixels found in image');return;}
+
+    setP(52,'Assigning pixels…');await tick(10);
+    const map=assign(data,W,H,C);
+
+    setP(65,'Preview…');await tick(10);
+    previewQ(map,W,H,C);
+
+    setP(70,'Counting baseline rects…');await tick(10);
+    let rawRects=0;
+    for(let ci=0;ci<C.length;ci++){
+      for(let y=0;y<H;y++){
+        let rs=-1;
+        for(let x=0;x<=W;x++){
+          const isC=(x<W)&&map[y*W+x]===ci;
+          if(isC&&rs===-1)rs=x;
+          else if(!isC&&rs!==-1){rawRects++;rs=-1;}
+        }
+      }
+    }
+
+    setP(78,'Merging rectangles…');await tick(10);
+    const{ox,oy}=getOffset(W,H);
+    const state=buildState(map,W,H,C,ox,oy);
+    const totalRects=state.expressions.list.length;
+
+    setP(95,'Rendering…');await tick(10);
+    renderResults(state,totalRects,rawRects,C,W,H);
+    setP(100,`Done — ${totalRects.toLocaleString()} polygons`);
+    await tick(400);
+  }catch(err){
+    showToast('Error: ' + err.message);
+    console.error(err);
+  }finally{
+    hideP();
+    this.disabled = false;
+  }
+});
+
+// Initialize
+genBtn.disabled = true;
+showToast('Drop an image to start');
+</script>
+</body>
+</html>
